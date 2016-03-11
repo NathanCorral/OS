@@ -33,6 +33,11 @@ _tss:
 	.byte 0
 	.endr
 tss_bottom:
+	.align 4
+	.word 0 # Padding
+gdt_desc:
+	.word gdt_bottom - gdt - 1
+	.long gdt
 
 	.align  16
 gdt:
@@ -104,5 +109,7 @@ _idt:
 	.rept NUM_VEC
 	.quad 0
 	.endr
+
+	
 
 idt_bottom:
