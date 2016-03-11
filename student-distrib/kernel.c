@@ -8,19 +8,27 @@
 #include "i8259.h"
 #include "debug.h"
 
+#include "errors.h"
+ #include "keyboard.h"
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
+
+
+
 
 /* Check if MAGIC is valid and print the Multiboot information structure
    pointed by ADDR. */
 void
 entry (unsigned long magic, unsigned long addr)
 {
+int x,y;
+int i;
 	multiboot_info_t *mbi;
 
 	/* Clear the screen. */
 	clear();
+
 
 	/* Am I booted by a Multiboot-compliant boot loader? */
 	if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
@@ -144,8 +152,91 @@ entry (unsigned long magic, unsigned long addr)
 		ltr(KERNEL_TSS);
 	}
 
+	//exceptions
+for(i=0; i<0x20; i++){
+	
+	idt[i].present = 1;
+    idt[i].dpl = 0;
+    idt[i].reserved0 = 0;
+    idt[i].size = 1;
+    idt[i].reserved1 = 1;
+    idt[i].reserved2 = 1;
+    idt[i].reserved3 = 1;
+    idt[i].reserved4 = 0;
+    idt[i].seg_selector = KERNEL_CS;
+}
+
+//interrupts
+for(i=0x20; i<0x2F; i++){
+	idt[i].present = 1;
+    idt[i].dpl = 0;
+    idt[i].reserved0 = 0;
+    idt[i].size = 1;
+    idt[i].reserved1 = 1;
+    idt[i].reserved2 = 1;
+    idt[i].reserved3 = 0;
+    idt[i].reserved4 = 0;
+    idt[i].seg_selector = KERNEL_CS;
+}
+
+	SET_IDT_ENTRY(idt[0], dividebyzero);
+	SET_IDT_ENTRY(idt[1], debugger);
+	SET_IDT_ENTRY(idt[2], nmi);
+	SET_IDT_ENTRY(idt[3], breakpoint);
+	SET_IDT_ENTRY(idt[4], overflow);
+	SET_IDT_ENTRY(idt[5], bounds);
+	SET_IDT_ENTRY(idt[6], invalidopcode);
+	SET_IDT_ENTRY(idt[7], coprocessornotavailable);
+	SET_IDT_ENTRY(idt[8], doublefault);
+	SET_IDT_ENTRY(idt[9], coprocessorsegoverrun);
+	SET_IDT_ENTRY(idt[10], invalidtask);
+	SET_IDT_ENTRY(idt[11], segnotpresent);
+	SET_IDT_ENTRY(idt[12], stackfault);
+	SET_IDT_ENTRY(idt[13], genprotection);
+	SET_IDT_ENTRY(idt[14], pagefault);
+	SET_IDT_ENTRY(idt[15], reserved);
+	SET_IDT_ENTRY(idt[16], mathfault);
+	SET_IDT_ENTRY(idt[17], aligncheck);
+	SET_IDT_ENTRY(idt[18], machinecheck);
+	SET_IDT_ENTRY(idt[19], simdfloat);
+
+	//reserved
+	for(i=20; i <= 31; i++) {
+        SET_IDT_ENTRY(idt[i], reserved);		
+    }
+	i=0x80;
+    idt[i].present = 1;
+    idt[i].dpl = 3;
+    idt[i].reserved0 = 0;
+    idt[i].size = 1;
+    idt[i].reserved1 = 1;
+    idt[i].reserved2 = 1;
+    idt[i].reserved3 = 0;
+    idt[i].reserved4 = 0;
+    idt[i].seg_selector = KERNEL_CS; 
+	SET_IDT_ENTRY(idt[0x80], syscall);
+
+
+
+	
+//	x=5/0;
+	
+clear();
+
 	/* Init the PIC */
 	i8259_init();
+
+
+	SET_IDT_ENTRY(idt[33],keyboard_handle);
+	cli();
+	enable_irq(1);
+	
+//x=5/0;
+sti();
+
+	// SET_IDT_ENTRY(idt[0x28], reserved);
+	// enable_irq(8);
+
 
 	/* Initialize devices, memory, filesystem, enable device interrupts on the
 	 * PIC, any other initialization stuff... */
@@ -158,8 +249,11 @@ entry (unsigned long magic, unsigned long addr)
 	sti();*/
 
 	/* Execute the first program (`shell') ... */
+	while(1);
 
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");
 }
+
+
 
