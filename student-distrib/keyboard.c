@@ -24,6 +24,7 @@
 #define ESCAPE 0x01
 
 #define RELEASE(key) (key |0x80)
+static char last;
 
 static uint8_t keychar [64]={
 '\0', '\0', '1','2','3','4','5','6','7','8','9','0','-','=','\0','\0',
@@ -47,6 +48,7 @@ void keyboard_handle(){
 cli();
 	uint8_t key;
 
+
 	//save registers?
 
 //	LOCK();
@@ -56,24 +58,17 @@ cli();
 	// else if (key== RELEASE(LEFTSHIFT) || key== RELEASE(RIGHTSHIFT))
 	// 	shiftset=0;
 
-
+	if(key !=RELEASE(last))
 	putc(keychar[key]);
 
-	
+	last=key;
+
+	sti();
 	send_eoi(1);
 
 
-	sti();
-
-	//restore
-	 // asm volatile (" \
-	 // 	leave	\n\
-	 // 	iret"
-	 // 	:
-	 // 	:
-	 // 	:"memory");
 	
-//	UNLOCK();
-	//restore registers
+
+
 
 }

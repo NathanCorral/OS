@@ -104,9 +104,12 @@ disable_irq(uint32_t irq_num)
 void
 send_eoi(uint32_t irq_num)
 {
-	if(irq_num>=8)
+	if(irq_num>=8){
 		outb((EOI| (irq_num -8)), SLAVE_8259_PORT);
-	outb(EOI | irq_num, MASTER_8259_PORT);
+		send_eoi(2);
+	}
+		else
+	outb((EOI | irq_num), MASTER_8259_PORT);
 
 }
 
