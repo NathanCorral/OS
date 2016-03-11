@@ -10,6 +10,7 @@
 
 #include "errors.h"
  #include "keyboard.h"
+ #include "keyboardirq.h"
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
@@ -227,7 +228,7 @@ clear();
 	i8259_init();
 
 
-	SET_IDT_ENTRY(idt[33],keyboard_handle);
+	SET_IDT_ENTRY(idt[33],keyboard_wrapper);
 	cli();
 	enable_irq(1);
 	
@@ -249,7 +250,7 @@ sti();
 	sti();*/
 
 	/* Execute the first program (`shell') ... */
-	while(1);
+	//while(1);
 
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");

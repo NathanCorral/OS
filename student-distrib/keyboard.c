@@ -1,8 +1,9 @@
 
 
-#include "lib.h"
+//#include "lib.h"
 #include "keyboard.h"
 #include "i8259.h"
+#include "lib.h"
 
 #define LEFTCTRL 0x1D
 #define LEFTALT 0x38
@@ -60,13 +61,17 @@ cli();
 
 	
 	send_eoi(1);
+
+
 	sti();
-	 asm volatile (" \
-	 	leave	\n\
-	 	iret"
-	 	:
-	 	:
-	 	:"memory");
+
+	//restore
+	 // asm volatile (" \
+	 // 	leave	\n\
+	 // 	iret"
+	 // 	:
+	 // 	:
+	 // 	:"memory");
 	
 //	UNLOCK();
 	//restore registers
