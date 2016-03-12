@@ -9,9 +9,10 @@
 #include "debug.h"
 
 #include "errors.h"
- #include "keyboard.h"
- #include "keyboardirq.h"
- #include "rtcirq.h"
+#include "keyboard.h"
+#include "keyboardirq.h"
+#include "rtc.h"
+#include "rtcirq.h"
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
@@ -225,7 +226,7 @@ for(i=0x20; i<0x2F; i++){
 	
 	clear();
 	SET_IDT_ENTRY(idt[33],keyboard_wrapper);
-	SET_IDT_ENTRY(idt[0x28],rtc_wrapper);
+	SET_IDT_ENTRY(idt[40],rtc_wrapper);
 	/* Init the PIC */
 	i8259_init();
 	rtc_init();
@@ -233,6 +234,7 @@ for(i=0x20; i<0x2F; i++){
 	cli();
 	enable_irq(8);
 	enable_irq(1);
+	enable_irq(2);
 	sti();
 
 	// SET_IDT_ENTRY(idt[0x28], reserved);

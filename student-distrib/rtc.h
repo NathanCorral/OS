@@ -7,6 +7,7 @@
 #define RTC_REG_B 0x0B
 #define RTC_REG_C 0x0C
 #define RTC_REG_D 0x0D
+#define DISABLE_NMI 0x80
 #define RTC_PORT 0x70
 #define CMOS_PORT 0x71
 #define BIT_SIX 0x40
