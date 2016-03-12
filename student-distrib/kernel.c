@@ -11,6 +11,7 @@
 #include "errors.h"
  #include "keyboard.h"
  #include "keyboardirq.h"
+ #include "rtcirq.h"
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
@@ -212,7 +213,7 @@ for(i=0x20; i<0x2F; i++){
     idt[i].size = 1;
     idt[i].reserved1 = 1;
     idt[i].reserved2 = 1;
-    idt[i].reserved3 = 0;
+    idt[i].reserved3 = 1;
     idt[i].reserved4 = 0;
     idt[i].seg_selector = KERNEL_CS; 
 	SET_IDT_ENTRY(idt[0x80], syscall);
@@ -222,18 +223,17 @@ for(i=0x20; i<0x2F; i++){
 	
 //	x=5/0;
 	
-clear();
-
+	clear();
+	SET_IDT_ENTRY(idt[33],keyboard_wrapper);
+	SET_IDT_ENTRY(idt[0x28],rtc_wrapper);
 	/* Init the PIC */
 	i8259_init();
+	rtc_init();
 
-
-	SET_IDT_ENTRY(idt[33],keyboard_wrapper);
 	cli();
+	enable_irq(8);
 	enable_irq(1);
-	
-//x=5/0;
-sti();
+	sti();
 
 	// SET_IDT_ENTRY(idt[0x28], reserved);
 	// enable_irq(8);
