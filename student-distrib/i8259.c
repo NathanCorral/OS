@@ -23,15 +23,37 @@ int i;
 	
 	//initialize the master
 	outb(ICW1, MASTER_8259_PORT);
-	outb(ICW2_MASTER, MASTER_IMR_PORT);
-	outb(ICW3_MASTER, MASTER_IMR_PORT);
-	outb(ICW4, MASTER_IMR_PORT);
-
-	//initialize the slave
+for(i=0; i<100000;i++);
 	outb(ICW1, SLAVE_8259_PORT);
+for(i=0; i<100000;i++);
+
+
+	outb(ICW2_MASTER, MASTER_IMR_PORT);
+for(i=0; i<100000;i++);
 	outb(ICW2_SLAVE, SLAVE_IMR_PORT);
+
+for(i=0; i<100000;i++);
+
+	outb(ICW3_MASTER, MASTER_IMR_PORT);
+	for(i=0; i<100000;i++);
 	outb(ICW3_SLAVE, SLAVE_IMR_PORT);
+	for(i=0; i<100000;i++);
+
+	outb(ICW4, MASTER_IMR_PORT);
+	for(i=0; i<100000;i++);
 	outb(ICW4, SLAVE_IMR_PORT);
+	for(i=0; i<100000;i++);
+	//initialize the slave
+	
+	
+
+	
+	
+
+	
+	
+
+	
 
 
 	outb(master_mask, MASTER_IMR_PORT);
@@ -66,7 +88,7 @@ enable_irq(uint32_t irq_num)
 	else{
 		port=SLAVE_IMR_PORT;
 		irq_num -=8;
-		mask = inb(MASTER_IMR_PORT) & ~(1 << irq_num);
+		mask = inb(SLAVE_IMR_PORT) & ~(1 << irq_num);
 		outb(mask, port);
 		
 	}
@@ -88,6 +110,7 @@ enable_irq(uint32_t irq_num)
 			printf("Failed to enable irq \n");
 #endif
 //mask= inb(port);
+//printf("%x\n", mask);
 	
 
 }
@@ -105,7 +128,7 @@ disable_irq(uint32_t irq_num)
 		port=SLAVE_IMR_PORT;
 		irq_num -=8;
 	}
-	outb((inb(port) | (irq_num*2)), port);
+	outb((inb(port) | (1<<irq_num)), port);
 }
 
 /* Send end-of-interrupt signal for the specified IRQ */

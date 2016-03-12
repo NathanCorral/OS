@@ -13,6 +13,7 @@
 #include "keyboardirq.h"
 #include "rtc.h"
 #include "rtcirq.h"
+ #include "paging.h"
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
@@ -25,10 +26,10 @@
 void
 entry (unsigned long magic, unsigned long addr)
 {
-int x,y;
+//int x,y;
 int i;
 	multiboot_info_t *mbi;
-
+	
 	/* Clear the screen. */
 	clear();
 
@@ -182,6 +183,7 @@ for(i=0x20; i<0x2F; i++){
     idt[i].seg_selector = KERNEL_CS;
 }
 
+
 	SET_IDT_ENTRY(idt[0], dividebyzero);
 	SET_IDT_ENTRY(idt[1], debugger);
 	SET_IDT_ENTRY(idt[2], nmi);
@@ -219,17 +221,42 @@ for(i=0x20; i<0x2F; i++){
     idt[i].seg_selector = KERNEL_CS; 
 	SET_IDT_ENTRY(idt[0x80], syscall);
 
-
-
-	
-//	x=5/0;
-	
-	clear();
-	SET_IDT_ENTRY(idt[33],keyboard_wrapper);
+SET_IDT_ENTRY(idt[33],keyboard_wrapper);
 	SET_IDT_ENTRY(idt[40],rtc_wrapper);
+
+
+//	x=5/0;
+	// i = 33;
+	// idt[i].present = 1;
+ //    idt[i].dpl = 0;
+ //    idt[i].reserved0 = 0;
+ //    idt[i].size = 1;
+ //    idt[i].reserved1 = 1;
+ //    idt[i].reserved2 = 1;
+ //    idt[i].reserved3 = 0;
+ //    idt[i].reserved4 = 0;
+ //    idt[i].seg_selector = KERNEL_CS;
+	lidt(idt_desc_ptr);
+	clear();
+	
+
+pageinit();
+pageenable();
+
+int x;
+x=5;
+printf("%d \n", x);
+x=10;
+printf("%d \n", x);
+
+// char *pointer;
+// pointer=(char *) 0x1b8000;
+
+// *pointer= 'c';
 	/* Init the PIC */
 	i8259_init();
 	rtc_init();
+
 
 	cli();
 	enable_irq(8);

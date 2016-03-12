@@ -32,16 +32,16 @@ static uint8_t keychar [64]={
 'd','f','g','h','j','k','l',';','\'', '`', '\0','\\', 'z','x','c','v',
 'b','n','m',',','.','/', '\0','\0','\0', ' ', '\0','\0','\0','\0','\0','\0'
 };
-static uint8_t keyshiftchar [64]={
-'\0', '\0', '!','@','#','$','%','^','&','*','(',')','_','+','\0','\0',
-'Q','W','E','R','T','Y','U','I','O','P','{','}','\0','\0','A','S',
-'D','F','G','H','J','K','L',':','\'', '~', '\0','|', 'Z','X','C','V',
-'B','N','M','<','>','?', '\0','\0','\0', ' ', '\0','\0','\0','\0','\0','\0'
-};
+// static uint8_t keyshiftchar [64]={
+// '\0', '\0', '!','@','#','$','%','^','&','*','(',')','_','+','\0','\0',
+// 'Q','W','E','R','T','Y','U','I','O','P','{','}','\0','\0','A','S',
+// 'D','F','G','H','J','K','L',':','\'', '~', '\0','|', 'Z','X','C','V',
+// 'B','N','M','<','>','?', '\0','\0','\0', ' ', '\0','\0','\0','\0','\0','\0'
+// };
 
-static uint8_t ctrlset=0; //for later
-static uint8_t shiftset=0;
-static uint8_t altset=0; //for later
+// static uint8_t ctrlset=0; //for later
+// static uint8_t shiftset=0;
+// static uint8_t altset=0; //for later
 
 void keyboard_handle(){
 //printf("in keyboard\n");
@@ -49,9 +49,7 @@ cli();
 	uint8_t key;
 
 
-	//save registers?
-
-//	LOCK();
+	
 	key=inb(0x60);
 	// if(key== LEFTSHIFT || key== RIGHTSHIFT)
 	// 	shiftset=1;

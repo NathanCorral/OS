@@ -111,6 +111,27 @@ typedef struct __attribute__((packed)) tss_t {
 	uint16_t io_base_addr;
 } tss_t;
 
+
+typedef struct {
+	union{
+		uint32_t addr;
+		struct{
+		uint32_t flags : 12;
+		uint32_t addrshift :20;
+	} __attribute__((packed));
+	};
+}pde;
+typedef struct {
+	union{
+		uint32_t addr;
+		struct{
+		uint32_t flags : 12;
+		uint32_t addrshift :20;
+	} __attribute__((packed));
+	};
+}pte;
+
+
 /* Some external descriptors declared in .S files */
 extern x86_desc_t gdt_desc;
 
