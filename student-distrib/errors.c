@@ -1,9 +1,8 @@
 
-// #ifndef _errors
-// #define _errors
+
 
 #include "errors.h"
-
+//print name of exception for each exception
 void dividebyzero(){
 	printf("divide by zero error \n");
 	while(1);

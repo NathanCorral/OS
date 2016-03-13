@@ -21,18 +21,17 @@ int i;
 	slave_mask=0xFF;
 
 	
-	//initialize the master
+	//initialize the master and slave
 	outb(ICW1, MASTER_8259_PORT);
-for(i=0; i<100000;i++);
+	for(i=0; i<100000;i++); //wait for pic
 	outb(ICW1, SLAVE_8259_PORT);
-for(i=0; i<100000;i++);
+	for(i=0; i<100000;i++);
 
 
 	outb(ICW2_MASTER, MASTER_IMR_PORT);
-for(i=0; i<100000;i++);
+	for(i=0; i<100000;i++);
 	outb(ICW2_SLAVE, SLAVE_IMR_PORT);
-
-for(i=0; i<100000;i++);
+	for(i=0; i<100000;i++);
 
 	outb(ICW3_MASTER, MASTER_IMR_PORT);
 	for(i=0; i<100000;i++);
@@ -43,19 +42,11 @@ for(i=0; i<100000;i++);
 	for(i=0; i<100000;i++);
 	outb(ICW4, SLAVE_IMR_PORT);
 	for(i=0; i<100000;i++);
-	//initialize the slave
 	
-	
-
 	
 	
 
-	
-	
-
-	
-
-
+	//send out masks
 	outb(master_mask, MASTER_IMR_PORT);
 	outb(slave_mask, SLAVE_IMR_PORT);
 
@@ -77,40 +68,33 @@ enable_irq(uint32_t irq_num)
 	#ifdef DEBUG_PIC
 	int i;
 #endif
-
+//if interrupt on master
 	if(irq_num<8){
 		port=MASTER_IMR_PORT;
 		mask = inb(port);
+		//change mask
 		mask=mask & ~(1 << irq_num);
-
+		//send mask
 		outb(mask , port);
 	}
+		//if interrupt on slave
 	else{
 		port=SLAVE_IMR_PORT;
-		irq_num -=8;
+		irq_num -=8; //find correct irq number
+		//change mask
 		mask = inb(SLAVE_IMR_PORT) & ~(1 << irq_num);
+		//send mask
 		outb(mask, port);
 		
 	}
-	// outb((inb(port) & ~(irq_num*2)), port);
-		/*
-			0xFF
-			2 - 10
-			0xF (1101)
-		*/
-
-	// char mask = inb(port);
-	// mask=mask & ~(1 << irq_num);
-
-	// 	outb(mask , port);
+	
 #ifdef DEBUG_PIC
 		for(i=0; i<10000; i++); // wait a sec before we check
 		i = inb(port);
 		if(i & (irq_num << 1) != 0)
 			printf("Failed to enable irq \n");
 #endif
-//mask= inb(port);
-//printf("%x\n", mask);
+
 	
 
 }
@@ -120,27 +104,29 @@ void
 disable_irq(uint32_t irq_num)
 {
 	uint16_t port;
-
+//if irq on master
 	if(irq_num<8){
 		port=MASTER_IMR_PORT;
 	}
 	else{
 		port=SLAVE_IMR_PORT;
-		irq_num -=8;
+		irq_num -=8; //get correct irq number for slave
 	}
-	outb((inb(port) | (1<<irq_num)), port);
+	outb((inb(port) | (1<<irq_num)), port); //send 1 to correct spot in mask
 }
 
 /* Send end-of-interrupt signal for the specified IRQ */
 void
 send_eoi(uint32_t irq_num)
 {
+	//if irq on slave
 	if(irq_num>=8){
-		outb((EOI| (irq_num -8)), SLAVE_8259_PORT);
-		send_eoi(2);
+		outb((EOI| (irq_num -8)), SLAVE_8259_PORT); //send slave eoi
+		send_eoi(2); //send master eoi to 2
 	}
 		else
-	outb((EOI | irq_num), MASTER_8259_PORT);
+			//irq on master
+	outb((EOI | irq_num), MASTER_8259_PORT); //send master eoi
 
 }
 

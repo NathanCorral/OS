@@ -8,11 +8,11 @@ void rtc_init(){
 	char prev_b = inb(CMOS_PORT);  // Stores the current value of register B
 	outb((RTC_REG_B|DISABLE_NMI),RTC_PORT); // Sets the index
 	outb((prev_b | BIT_SIX), CMOS_PORT);  // Turns on bit 6 of register B
-	sti();
+	
 
 	// Sets the frequency of the rtc driver to 2 HZ
 	//RATE &= BOT_FOUR; // Checks if rate is at least 2 and not above 15
-	cli();
+	
 	outb((RTC_REG_A|DISABLE_NMI), RTC_PORT); // Disable NMI and select register B
 	char prev_a = inb(CMOS_PORT);  // Stores the current value of register B
 	outb((RTC_REG_A|DISABLE_NMI),RTC_PORT); // Resets the index to B
@@ -24,7 +24,7 @@ void rtc_init(){
 void rtc_handle(){
 	// NOTE::: delete cli/ sti after we make a common handler
 	//cli();
-	//printf("%d in rtc", count++);
+	printf("%d in rtc \n", count++);
 	send_eoi(8);
 	outb(RTC_REG_C,RTC_PORT);	// select register C
 	inb(CMOS_PORT);		// just throw away contents

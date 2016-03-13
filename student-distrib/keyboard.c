@@ -22,6 +22,8 @@
 #define SPACE 0x39
 #define TAB 0x0F
 #define ESCAPE 0x01
+#define PORT 0x60
+#define ALLRELEASE 0x59	
 
 #define RELEASE(key) (key |0x80)
 
@@ -50,19 +52,19 @@ cli();
 
 
 	
-	key=inb(0x60);
+	key=inb(PORT); //get key
 	// if(key== LEFTSHIFT || key== RIGHTSHIFT)
 	// 	shiftset=1;
 	// else if (key== RELEASE(LEFTSHIFT) || key== RELEASE(RIGHTSHIFT))
 	// 	shiftset=0;
 
-	if(key < 0x59)
+	if(key < ALLRELEASE) //check if release 
 	putc(keychar[key]);
 
 	
 
 	
-	send_eoi(1);
+	send_eoi(1); //end interrupt
 sti();
 
 	

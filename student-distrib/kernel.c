@@ -29,7 +29,7 @@ void
 entry (unsigned long magic, unsigned long addr)
 {
 //int x,y;
-int i;
+//int i;
 	multiboot_info_t *mbi;
 	
 	/* Clear the screen. */
@@ -158,108 +158,29 @@ int i;
 		ltr(KERNEL_TSS);
 	}
 
-	//exceptions
-// for(i=0; i<0x20; i++){
 	
-// 	idt[i].present = 1;
-//     idt[i].dpl = 0;
-//     idt[i].reserved0 = 0;
-//     idt[i].size = 1;
-//     idt[i].reserved1 = 1;
-//     idt[i].reserved2 = 1;
-//     idt[i].reserved3 = 1;
-//     idt[i].reserved4 = 0;
-//     idt[i].seg_selector = KERNEL_CS;
-// }
+interruptinit(); //initialize interrupts
 
-// //interrupts
-// for(i=0x20; i<0x2F; i++){
-// 	idt[i].present = 1;
-//     idt[i].dpl = 0;
-//     idt[i].reserved0 = 0;
-//     idt[i].size = 1;
-//     idt[i].reserved1 = 1;
-//     idt[i].reserved2 = 1;
-//     idt[i].reserved3 = 0;
-//     idt[i].reserved4 = 0;
-//     idt[i].seg_selector = KERNEL_CS;
-// }
-
-
-// 	SET_IDT_ENTRY(idt[0], dividebyzero);
-// 	SET_IDT_ENTRY(idt[1], debugger);
-// 	SET_IDT_ENTRY(idt[2], nmi);
-// 	SET_IDT_ENTRY(idt[3], breakpoint);
-// 	SET_IDT_ENTRY(idt[4], overflow);
-// 	SET_IDT_ENTRY(idt[5], bounds);
-// 	SET_IDT_ENTRY(idt[6], invalidopcode);
-// 	SET_IDT_ENTRY(idt[7], coprocessornotavailable);
-// 	SET_IDT_ENTRY(idt[8], doublefault);
-// 	SET_IDT_ENTRY(idt[9], coprocessorsegoverrun);
-// 	SET_IDT_ENTRY(idt[10], invalidtask);
-// 	SET_IDT_ENTRY(idt[11], segnotpresent);
-// 	SET_IDT_ENTRY(idt[12], stackfault);
-// 	SET_IDT_ENTRY(idt[13], genprotection);
-// 	SET_IDT_ENTRY(idt[14], pagefault);
-// 	SET_IDT_ENTRY(idt[15], reserved);
-// 	SET_IDT_ENTRY(idt[16], mathfault);
-// 	SET_IDT_ENTRY(idt[17], aligncheck);
-// 	SET_IDT_ENTRY(idt[18], machinecheck);
-// 	SET_IDT_ENTRY(idt[19], simdfloat);
-
-// 	//reserved
-// 	for(i=20; i <= 31; i++) {
-//         SET_IDT_ENTRY(idt[i], reserved);		
-//     }
-// 	i=0x80;
-//     idt[i].present = 1;
-//     idt[i].dpl = 3;
-//     idt[i].reserved0 = 0;
-//     idt[i].size = 1;
-//     idt[i].reserved1 = 1;
-//     idt[i].reserved2 = 1;
-//     idt[i].reserved3 = 1;
-//     idt[i].reserved4 = 0;
-//     idt[i].seg_selector = KERNEL_CS; 
-// 	SET_IDT_ENTRY(idt[0x80], syscall);
-
-// SET_IDT_ENTRY(idt[33],keyboard_wrapper);
-// 	SET_IDT_ENTRY(idt[40],rtc_wrapper);
-interruptinit();
-
-//	x=5/0;
-	// i = 33;
-	// idt[i].present = 1;
- //    idt[i].dpl = 0;
- //    idt[i].reserved0 = 0;
- //    idt[i].size = 1;
- //    idt[i].reserved1 = 1;
- //    idt[i].reserved2 = 1;
- //    idt[i].reserved3 = 0;
- //    idt[i].reserved4 = 0;
- //    idt[i].seg_selector = KERNEL_CS;
-	lidt(idt_desc_ptr);
-	clear();
+	lidt(idt_desc_ptr); //load idt
+	clear(); //clear again just to be sure
 	
 
-pageinit();
+pageinit();  //initialize and enable paging
 pageenable();
 
+//paging test
 int x;
 x=5;
 printf("%d \n", x);
 x=10;
 printf("%d \n", x);
 
-// char *pointer;
-// pointer=(char *) 0x1b8000;
 
-// *pointer= 'c';
 	/* Init the PIC */
 	i8259_init();
-	rtc_init();
+	rtc_init(); //initialize rtc
 
-
+//enable interrupts
 	cli();
 	enable_irq(8);
 	enable_irq(1);
