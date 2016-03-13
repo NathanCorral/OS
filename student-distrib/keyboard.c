@@ -34,15 +34,17 @@ static uint8_t keychar [64]={
 'd','f','g','h','j','k','l',';','\'', '`', '\0','\\', 'z','x','c','v',
 'b','n','m',',','.','/', '\0','\0','\0', ' ', '\0','\0','\0','\0','\0','\0'
 };
-// static uint8_t keyshiftchar [64]={
-// '\0', '\0', '!','@','#','$','%','^','&','*','(',')','_','+','\0','\0',
-// 'Q','W','E','R','T','Y','U','I','O','P','{','}','\0','\0','A','S',
-// 'D','F','G','H','J','K','L',':','\'', '~', '\0','|', 'Z','X','C','V',
-// 'B','N','M','<','>','?', '\0','\0','\0', ' ', '\0','\0','\0','\0','\0','\0'
-// };
+static uint8_t keyshiftchar [64]={
+'\0', '\0', '!','@','#','$','%','^','&','*','(',')','_','+','\0','\0',
+'Q','W','E','R','T','Y','U','I','O','P','{','}','\0','\0','A','S',
+'D','F','G','H','J','K','L',':','\'', '~', '\0','|', 'Z','X','C','V',
+'B','N','M','<','>','?', '\0','\0','\0', ' ', '\0','\0','\0','\0','\0','\0'
+};
 
 // static uint8_t ctrlset=0; //for later
-// static uint8_t shiftset=0;
+ static uint8_t shiftset=0;
+  static uint8_t capset=0;
+
 // static uint8_t altset=0; //for later
 
 void keyboard_handle(){
@@ -53,13 +55,20 @@ cli();
 
 	
 	key=inb(PORT); //get key
-	// if(key== LEFTSHIFT || key== RIGHTSHIFT)
-	// 	shiftset=1;
-	// else if (key== RELEASE(LEFTSHIFT) || key== RELEASE(RIGHTSHIFT))
-	// 	shiftset=0;
+	 if(key== LEFTSHIFT || key== RIGHTSHIFT)
+	 	shiftset=1;
+	 else if (key== RELEASE(LEFTSHIFT) || key== RELEASE(RIGHTSHIFT))
+	 	shiftset=0;
+	 else if (key==CAPS)
+	 	capset = ~capset;
 
-	if(key < ALLRELEASE) //check if release 
-	putc(keychar[key]);
+	if(key < ALLRELEASE){
+		if (shiftset || capset)
+		putc(keyshiftchar[key]);
+		else	
+		putc(keychar[key]);
+	} //check if release 
+	
 
 	
 

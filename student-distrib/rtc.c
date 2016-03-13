@@ -24,7 +24,7 @@ void rtc_init(){
 void rtc_handle(){
 	// NOTE::: delete cli/ sti after we make a common handler
 	//cli();
-	printf("%d in rtc \n", count++);
+	//printf("%d in rtc \n", count++);
 	send_eoi(8);
 	outb(RTC_REG_C,RTC_PORT);	// select register C
 	inb(CMOS_PORT);		// just throw away contents
