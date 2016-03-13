@@ -12,6 +12,8 @@
 
 void interruptinit(){
 	int i;
+
+// Set idt for exceptions
 for(i=0; i<0x20; i++){
 	
 	idt[i].present = 1;
@@ -25,7 +27,7 @@ for(i=0; i<0x20; i++){
     idt[i].seg_selector = KERNEL_CS;
 }
 
-//interrupts
+// Set idt for interrupts
 for(i=0x20; i<0x2F; i++){
 	idt[i].present = 1;
     idt[i].dpl = 0;
@@ -38,7 +40,7 @@ for(i=0x20; i<0x2F; i++){
     idt[i].seg_selector = KERNEL_CS;
 }
 
-
+	// Link exception handlers
 	SET_IDT_ENTRY(idt[0], dividebyzero);
 	SET_IDT_ENTRY(idt[1], debugger);
 	SET_IDT_ENTRY(idt[2], nmi);
@@ -60,10 +62,12 @@ for(i=0x20; i<0x2F; i++){
 	SET_IDT_ENTRY(idt[18], machinecheck);
 	SET_IDT_ENTRY(idt[19], simdfloat);
 
-	//reserved
+	//Fill the rest with reserved
 	for(i=20; i <= 31; i++) {
         SET_IDT_ENTRY(idt[i], reserved);		
     }
+
+    // Set up system call basics
 	i=0x80;
     idt[i].present = 1;
     idt[i].dpl = 3;
@@ -76,7 +80,8 @@ for(i=0x20; i<0x2F; i++){
     idt[i].seg_selector = KERNEL_CS; 
 	SET_IDT_ENTRY(idt[0x80], syscall);
 
-SET_IDT_ENTRY(idt[33],keyboard_wrapper);
+	// Link interupt handlers.
+	SET_IDT_ENTRY(idt[33],keyboard_wrapper);
 	SET_IDT_ENTRY(idt[40],rtc_wrapper);
 
 	}
