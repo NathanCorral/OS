@@ -39,6 +39,17 @@ do {									\
 		);								\
 } while(0)
 
+#define ugg(lock)				\
+do {									\
+	asm volatile(						\
+		"movl $1, (%%eax)"				\
+		:								\
+		: "a" (lock)					\
+		: "memory"						\
+		);								\
+} while(0)
+
+
 /*
 My implemenation does not work for some reason.
 Use cli_and_save to keep flags
