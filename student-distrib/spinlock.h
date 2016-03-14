@@ -68,7 +68,7 @@ Does not compile.
 #define spin_unlock_irqrestore(lock, flags)	\
 do {										\
 	asm volatile(  "movb $0, %0 \n\t"		\
-		"pushl %0 \n\t"						\
+		"pushl %1 \n\t"						\
 		"popfl "							\
 		:  "=r"(lock)	: "r"(flags)  : );  \						
 } while(0)
