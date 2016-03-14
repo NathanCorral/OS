@@ -19,11 +19,11 @@ do {									\
 	asm volatile(						\
 		"movb $1, %%al \n\t"			\
 		"1: \n\t"						\
-		"xchgb %%al, (%0) \n\t"			\
+		"xchgb %%al, %0 \n\t"			\
 		"testb %%al, %%al \n\t"			\
 		"jnz 1b"						\
-		:								\
-		: "r" (lock)					\
+		: "=r" (lock)					\
+		: "0" (lock)					\
 		: "cc", "%al", "memory"			\
 		);								\
 } while(0)
@@ -32,57 +32,48 @@ do {									\
 #define spin_unlock(lock)				\
 do {									\
 	asm volatile(						\
-		"movb $0, (%%eax)"				\
-		:								\
-		: "a" (lock)					\
-		: "memory"						\
+		"movb $0, %0"  					\
+		: "=r" (lock)					\
+		: 								\
+		: "cc"							\
 		);								\
 } while(0)
 
-#define ugg(lock)				\
+#define spin_lock_irqsave(lock, flags)	\
 do {									\
-	asm volatile(						\
-		"movl $1, (%%eax)"				\
-		:								\
-		: "a" (lock)					\
-		: "memory"						\
+	asm volatile( "pushfl \n\t"		\
+		"popl %0  \n\t"					\
+		"movb $1, %%al \n\t"			\
+		"1: \n\t"						\
+		"xchgb %%al, %1 \n\t"			\
+		"testb %%al, %%al \n\t"			\
+		"jnz 1b"						\
+		: "=r"(flags), "=r" (lock)		\
+		: "1" (lock)					\
+		: "cc", "%al", "memory"			\
 		);								\
+} while(0)
+
+
+#define spin_unlock_irqrestore(lock, flags)	\
+do {										\
+	spin_unlock(lock);						\
+	restore_flags(flags);					\
 } while(0)
 
 
 /*
-My implemenation does not work for some reason.
-Use cli_and_save to keep flags
+Does not compile.
 
-#define spin_lock_irqsave(lock, flags)	\
-do {									\
-	asm volatile(						\
-		"pushfl \n\t"					\
-		"popl %0"						\
-		"movb $1, %%al \n\t"			\
-		"1: \n\t"						\
-		"xchgb %%al, (%1) \n\t"			\
-		"testb %%al, %%al \n\t"			\
-		"jnz 1b"						\
-		:	"=c" (flags)				\
-		: "r" (lock)					\
-		: "cc", "%al", "memory"			\
-		);							\
+#define spin_unlock_irqrestore(lock, flags)	\
+do {										\
+	asm volatile(  "movb $0, %0 \n\t"		\
+		"pushl %0 \n\t"						\
+		"popfl "							\
+		:  "=r"(lock)	: "r"(flags)  : );  \						
 } while(0)
-
-#define spin_unlock_irqsave(lock, flags)\
-do {									\
-	asm volatile(						\
-		"pushl %0 \n\t"					\
-		"popfl \n\t"					\
-		"movb $0, (%%eax) \n\t"			\
-		:								\
-		: "r" (flags), "a" (lock)		\
-		: "cc", "memory"				\
-		);								\
-} while(0)
-
-
 */
+
+
 
 #endif
