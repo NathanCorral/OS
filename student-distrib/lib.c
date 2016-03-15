@@ -67,6 +67,7 @@ void scroll(){
 	
 }
 
+//print cursor to current screen position with offset x
 void updatecursor(int x){
 int position= (screen_y*NUM_COLS)+screen_x + x;
  outb(0x0F, 0x3D4); 
@@ -251,10 +252,18 @@ putc(uint8_t c)
         // screen_x %= NUM_COLS;
         // screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
     }
-    if(screen_y==NUM_ROWS-1 && screen_x==NUM_COLS){ //if on last line and get to end of line, scroll
-    	scroll();
+
+    if(screen_x== NUM_COLS){
     	screen_x=0;
+    	if(screen_y==NUM_ROWS-1)
+    		scroll();
+    	else
+    		screen_y++;
     }
+    // if(screen_y==NUM_ROWS-1 && screen_x==NUM_COLS){ //if on last line and get to end of line, scroll
+    // 	scroll();
+    // 	screen_x=0;
+    // }
     // else if( screen_x==NUM_COLS){
     // 	screen_y++;
     // 	screen_x=0;

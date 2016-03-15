@@ -7,9 +7,9 @@
 #include "lib.h"
 #include "i8259.h"
 #include "debug.h"
-
-#include "errors.h"
 #include "keyboard.h"
+#include "errors.h"
+
 #include "keyboardirq.h"
 #include "rtc.h"
 #include "rtcirq.h"
@@ -179,11 +179,11 @@ printf("%d \n", x);
 	/* Init the PIC */
 	i8259_init();
 	rtc_init(); //initialize rtc
-
+	keyboardopen();
 //enable interrupts
 	cli();
 	enable_irq(8);
-	enable_irq(1);
+	
 	enable_irq(2);
 	sti();
 

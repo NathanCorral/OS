@@ -46,13 +46,26 @@ static uint8_t keyshiftchar [64]={
  static uint8_t shiftset=0;
   static uint8_t capset=0;
 char buffer[128];
-char readbuffer[128];
+//char readbuffer[128];
 // static uint8_t altset=0; //for later
 int i=0;
 int cursor=0;
 
 //this will all have to change to deal with the buffer
 
+void keyboardopen(){
+	int j=0;
+//clear buffer
+	for (j=0; j<128; j++){
+		buffer[j]='\0';
+	}
+	i=0;
+	cursor=0;
+	setcoords(0,0);
+	updatecursor(cursor);
+		enable_irq(1);
+
+}
 
 
 int32_t keyboardread(int32_t fd, char* buf, int32_t nbytes){
@@ -126,16 +139,32 @@ if (i>=80){
 			i--;
 			buffer[i]=' ';
 			cursor--;
+			// int x=getx();
+			// int y= gety();
+			// if (x>0)
+			// 	x--;
+			// else{
+			// 	if(y>0){
+			// 		y--;
+			// 		x=79;
+			// 	}
+			// }
+			// setcoords(x, y);
+			// updatecursor(0);
 		}
 		else if (shiftset || capset){
 		buffer[i]=(keyshiftchar[key]);
 		i++;
-
+		if (cursor <0)
+			cursor++;
 		//putc(keyshiftchar[key]);
 	}
 		else{	
 		buffer[i]=(keychar[key]);
 		i++;
+		if(cursor<0)
+			cursor ++;
+
 		//putc(keychar[key]);
 		}
 		
@@ -153,3 +182,4 @@ setcoords(0,y);
 	send_eoi(1); //end interrupt
 sti();
 }
+

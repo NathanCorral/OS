@@ -4,5 +4,6 @@
 
 
 extern void keyboard_handle();
+extern void keyboardopen();
 
 #endif
