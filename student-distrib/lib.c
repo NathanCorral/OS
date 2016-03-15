@@ -25,8 +25,46 @@ clear(void)
     int32_t i;
     for(i=0; i<NUM_ROWS*NUM_COLS; i++) {
         *(uint8_t *)(video_mem + (i << 1)) = ' ';
-        *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
+       *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
     }
+}
+
+int32_t gety(){
+return screen_y;
+}
+int32_t getx(){
+return screen_x;
+}
+
+//sets coordinates within screen after checking if valid
+void setcoords(int x, int y){
+while (x<0)
+	x++;
+while (x>=NUM_COLS)
+	x--;
+while (y<0)
+	y++;
+while (y>=NUM_ROWS)
+	y--;
+screen_x=x;
+screen_y=y;
+
+}
+//scroll down when at the bottom of the terminal
+//moves all printed text up a row and clears bottom row
+void scroll(){
+	int x, y;
+	for(y=0; y<NUM_ROWS-1; y++){
+		for(x=0; x<NUM_COLS; x++){
+		//move each row up
+		*(uint8_t *)(video_mem+ ((NUM_COLS*y+x)<<1))=*(uint8_t *)(video_mem+ ((NUM_COLS*(y+1)+x)<<1));
+		}
+	}
+	//clear out last line
+	for(x=0; x<NUM_COLS; x++){
+		*(uint8_t *)(video_mem+ ((NUM_COLS*(NUM_ROWS-1)+x)<<1))= 0;
+	}
+	
 }
 
 /* Standard printf().
@@ -47,6 +85,7 @@ clear(void)
  *       Also note: %x is the only conversion specifier that can use
  *       the "#" modifier to alter output.
  * */
+
 int32_t
 printf(int8_t *format, ...)
 {
@@ -188,14 +227,26 @@ void
 putc(uint8_t c)
 {
     if(c == '\n' || c == '\r') {
+    	if(screen_y== NUM_ROWS-1){ //if last line, scroll
+    		scroll();
+    	}
+    	else
         screen_y++;
         screen_x=0;
     } else {
         *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = c;
         *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = ATTRIB;
         screen_x++;
-        screen_x %= NUM_COLS;
-        screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
+        // screen_x %= NUM_COLS;
+        // screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
+    }
+    if(screen_y==NUM_ROWS-1 && screen_x==NUM_COLS){ //if on last line and get to end of line, scroll
+    	scroll();
+    	screen_x=0;
+    }
+    else if( screen_x==NUM_COLS){
+    	screen_y++;
+    	screen_x=0;
     }
 }
 

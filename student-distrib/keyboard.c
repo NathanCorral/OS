@@ -23,6 +23,7 @@
 #define TAB 0x0F
 #define ESCAPE 0x01
 #define PORT 0x60
+#define LKEY 0x26
 #define ALLRELEASE 0x59	
 
 #define RELEASE(key) (key |0x80)
@@ -41,43 +42,109 @@ static uint8_t keyshiftchar [64]={
 'B','N','M','<','>','?', '\0','\0','\0', ' ', '\0','\0','\0','\0','\0','\0'
 };
 
-// static uint8_t ctrlset=0; //for later
+ static uint8_t ctrlset=0; //for later
  static uint8_t shiftset=0;
   static uint8_t capset=0;
-
+char buffer[128];
+char readbuffer[128];
 // static uint8_t altset=0; //for later
+int i=0;
+
+
+//this will all have to change to deal with the buffer
+
+
+
+int32_t keyboardread(int32_t fd, char* buf, int32_t nbytes){
+int j=0;
+int bytesread=0;
+while(j<nbytes && buffer[j] != '\0'){
+buf[j]= buffer[j];
+bytesread++;
+j++;
+}
+
+while(j<nbytes){
+	buf[j]='\0';
+	j++;
+}
+for(j=0; j<nbytes; j++){
+	putc(buf[j]);
+}
+
+int y=gety();
+setcoords(0, y);
+return bytesread;
+}
 
 void keyboard_handle(){
 //printf("in keyboard\n");
 cli();
-	uint8_t key;
+int j;	
+uint8_t key;
 
-
-	
 	key=inb(PORT); //get key
 	 if(key== LEFTSHIFT || key== RIGHTSHIFT)
 	 	shiftset=1;
 	 else if (key== RELEASE(LEFTSHIFT) || key== RELEASE(RIGHTSHIFT))
 	 	shiftset=0;
-	 else if (key==CAPS)
+if (i>=80){ 
+	i=0;
+	for(j=0; j<128; j++)
+	buffer[j]='\0';
+	//putc('\n');
+}
+
+	 if (key==CAPS)
 	 	capset = ~capset;
 
+	 if(key==LEFTCTRL)
+	 	ctrlset=1;
+	 else if (key==RELEASE(LEFTCTRL))
+	 	ctrlset=0;
+
 	if(key < ALLRELEASE){
-		if (shiftset || capset)
-		putc(keyshiftchar[key]);
-		else	
-		putc(keychar[key]);
+		if (key==ENTER){
+			putc('\n');
+			for(j=0; j<128; j++)
+				
+				buffer[j]='\0';
+			i=0;
+		}
+		else if (ctrlset==1 && key==LKEY){
+			for(j=0; j<128; j++)
+				buffer[j]='\0';
+			i=0;
+			clear();
+			setcoords(0,0);
+
+		}
+		else if(key==BACKSPACE){
+			if (i>0)
+			i--;
+			buffer[i]=' ';
+		}
+		else if (shiftset || capset){
+		buffer[i]=(keyshiftchar[key]);
+		i++;
+		//putc(keyshiftchar[key]);
+	}
+		else{	
+		buffer[i]=(keychar[key]);
+		i++;
+		//putc(keychar[key]);
+		}
+		
 	} //check if release 
 	
 
-	
-
-	
+for(j=0; j<128; j++){
+	if(buffer[j] != '\0')
+	putc(buffer[j]);
+}
+int y= gety();
+setcoords(0,y);
+//keyboardread(0, readbuffer, 80);
 	send_eoi(1); //end interrupt
 sti();
-
-	
-
-
-
 }
