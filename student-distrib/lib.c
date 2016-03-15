@@ -67,6 +67,17 @@ void scroll(){
 	
 }
 
+void updatecursor(int x){
+int position= (screen_y*NUM_COLS)+screen_x + x;
+ outb(0x0F, 0x3D4); 
+     outb((unsigned char)(position&0xFF), 0x3D5); 
+     /* cursor HIGH port to vga INDEX register */ 
+     outb(0x0E, 0x3D4); 
+     outb((unsigned char )((position>>8)&0xFF), 0x3D5); 
+
+
+}
+
 /* Standard printf().
  * Only supports the following format strings:
  * %%  - print a literal '%' character
@@ -244,10 +255,10 @@ putc(uint8_t c)
     	scroll();
     	screen_x=0;
     }
-    else if( screen_x==NUM_COLS){
-    	screen_y++;
-    	screen_x=0;
-    }
+    // else if( screen_x==NUM_COLS){
+    // 	screen_y++;
+    // 	screen_x=0;
+    // }
 }
 
 /*

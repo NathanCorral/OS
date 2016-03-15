@@ -13,10 +13,10 @@ void rtc_init(){
 	// Sets the frequency of the rtc driver to 2 HZ
 	//RATE &= BOT_FOUR; // Checks if rate is at least 2 and not above 15
 	
-	outb((RTC_REG_A|DISABLE_NMI), RTC_PORT); // Disable NMI and select register B
-	char prev_a = inb(CMOS_PORT);  // Stores the current value of register B
-	outb((RTC_REG_A|DISABLE_NMI),RTC_PORT); // Resets the index to B
-	outb(((prev_a & TOP_FOUR) | RATE),CMOS_PORT); // Writes the rate to B
+	outb((RTC_REG_A|DISABLE_NMI), RTC_PORT); // Disable NMI and select register A
+	char prev_a = inb(CMOS_PORT);  // Stores the current value of register A
+	outb((RTC_REG_A|DISABLE_NMI),RTC_PORT); // Resets the index to A
+	outb(((prev_a & TOP_FOUR) | RATE),CMOS_PORT); // Writes the rate to A
 	sti(); // Enables interrupts again
 
 }

@@ -49,7 +49,7 @@ char buffer[128];
 char readbuffer[128];
 // static uint8_t altset=0; //for later
 int i=0;
-
+int cursor=0;
 
 //this will all have to change to deal with the buffer
 
@@ -82,7 +82,7 @@ void keyboard_handle(){
 cli();
 int j;	
 uint8_t key;
-
+updatecursor(cursor);
 	key=inb(PORT); //get key
 	 if(key== LEFTSHIFT || key== RIGHTSHIFT)
 	 	shiftset=1;
@@ -106,9 +106,10 @@ if (i>=80){
 	if(key < ALLRELEASE){
 		if (key==ENTER){
 			putc('\n');
+
 			for(j=0; j<128; j++)
-				
 				buffer[j]='\0';
+					cursor=0;
 			i=0;
 		}
 		else if (ctrlset==1 && key==LKEY){
@@ -117,16 +118,19 @@ if (i>=80){
 			i=0;
 			clear();
 			setcoords(0,0);
+			cursor=0;
 
 		}
 		else if(key==BACKSPACE){
 			if (i>0)
 			i--;
 			buffer[i]=' ';
+			cursor--;
 		}
 		else if (shiftset || capset){
 		buffer[i]=(keyshiftchar[key]);
 		i++;
+
 		//putc(keyshiftchar[key]);
 	}
 		else{	
@@ -142,6 +146,7 @@ for(j=0; j<128; j++){
 	if(buffer[j] != '\0')
 	putc(buffer[j]);
 }
+updatecursor(cursor);
 int y= gety();
 setcoords(0,y);
 //keyboardread(0, readbuffer, 80);

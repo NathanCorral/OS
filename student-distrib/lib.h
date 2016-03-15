@@ -17,6 +17,7 @@ void clear(void);
 void setcoords(int x, int y);
 int32_t gety();
 int32_t getx();
+void updatecursor(int x);
 
 void* memset(void* s, int32_t c, uint32_t n);
 void* memset_word(void* s, int32_t c, uint32_t n);
