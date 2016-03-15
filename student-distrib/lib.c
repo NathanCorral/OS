@@ -41,15 +41,17 @@ void setcoords(int x, int y){
 if(x<0){
 
 	y--;
-	x= 0;
+	x= NUM_COLS-1;
 	
 }
-while (x>=NUM_COLS)
-	x--;
-while (y<0)
+if(x>=NUM_COLS){
+	x=0;
 	y++;
-while (y>=NUM_ROWS)
-	y--;
+}
+if (y<0)
+	y=0;
+if (y>=NUM_ROWS)
+	y=NUM_ROWS-1;
 screen_x=x;
 screen_y=y;
 
@@ -74,6 +76,7 @@ void scroll(){
 //print cursor to current screen position with offset x
 void updatecursor(int x){
 int position= (screen_y*NUM_COLS)+screen_x + x;
+
  outb(0x0F, 0x3D4); 
      outb((unsigned char)(position&0xFF), 0x3D5); 
      /* cursor HIGH port to vga INDEX register */ 
@@ -257,21 +260,21 @@ putc(uint8_t c)
         // screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
     }
 
-    // if(screen_x== NUM_COLS-1){
-    // 	screen_x=0;
-    // 	if(screen_y==NUM_ROWS-1)
-    // 		scroll();
-    // 	else
-    // 		screen_y++;
-    // }
-    // if(screen_y==NUM_ROWS-1 && screen_x==NUM_COLS){ //if on last line and get to end of line, scroll
-    // 	scroll();
-    // 	screen_x=0;
-    // }
-    // else if( screen_x==NUM_COLS){
-    // 	screen_y++;
-    // 	screen_x=0;
-    // }
+    if(screen_x== NUM_COLS-1){
+    	screen_x=0;
+    	if(screen_y==NUM_ROWS-1)
+    		scroll();
+    	else
+    		screen_y++;
+    }
+    if(screen_y==NUM_ROWS-1 && screen_x==NUM_COLS){ //if on last line and get to end of line, scroll
+    	scroll();
+    	screen_x=0;
+    }
+    else if( screen_x==NUM_COLS){
+    	screen_y++;
+    	screen_x=0;
+    }
 }
 
 /*

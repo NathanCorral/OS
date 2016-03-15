@@ -84,7 +84,7 @@ return successes;
 int32_t keyboardread( char* buf, int32_t nbytes){
 int j=0;
 int bytesread=0;
-while(j<nbytes && buffer[j] != '\0' && buffer[j--] !='\n'){
+while(j<nbytes && buffer[j] != '\0' && buffer[j-1] !='\n'){
 buf[j]= buffer[j];
 bytesread++;
 j++;
@@ -107,8 +107,14 @@ int32_t keyboardclose(){
 	return 0;
 }
 
+
+
+
+
+
+
 void keyboard_handle(){
-//printf("in keyboard\n");
+
 cli();
 int j;	
 uint8_t key;
@@ -119,16 +125,9 @@ updatecursor(cursor);
 	 else if (key== RELEASE(LEFTSHIFT) || key== RELEASE(RIGHTSHIFT))
 	 	shiftset=0;
 	
-if (i>=128){ 
-	while(key != ENTER);
-	putc('\n');
-	i=0;
-	for(j=0; j<128; j++)
-	buffer[j]='\0';
-	//putc('\n');
-}
 
-	 if (key==CAPS)
+
+	 if (key==CAPS) //check if capitalized or ctrl
 	 	capset = ~capset;
 
 	 if(key==LEFTCTRL)
@@ -136,72 +135,79 @@ if (i>=128){
 	 else if (key==RELEASE(LEFTCTRL))
 	 	ctrlset=0;
 
-	if(key < ALLRELEASE){
-		if (key==ENTER){
+if (i>=128){ 
+	if(key == ENTER || (ctrlset==1 && key== LKEY)){ //wait for enter
+
+	i=0;
+	for(j=0; j<128; j++)
+	buffer[j]='\0';
+}
+else{
+	send_eoi(1);
+	return;
+}
+
+}
+
+
+
+	if(key < ALLRELEASE){ //check if release
+		if (key==ENTER){ //if enter
 			putc('\n');
 
-			for(j=0; j<128; j++)
+			for(j=0; j<128; j++) //clear buffer
 				buffer[j]='\0';
-					cursor=0;
+					cursor=0; //reset cursor offset
 			i=0;
-		}
+	}
 		else if (ctrlset==1 && key==LKEY){
-			for(j=0; j<128; j++)
+			for(j=0; j<128; j++) //clear buffer
 				buffer[j]='\0';
 			i=0;
-			clear();
-			setcoords(0,0);
+			clear(); //clear screen
+			setcoords(0,0); //go to top of screen
 			cursor=0;
 
-		}
+	}
 		else if(key==BACKSPACE){
-			if (i>0)
+			if (i>0) //go back in buffer to rewrite
 			i--;
 			buffer[i]=' ';
-			cursor--;
-			// int x=getx();
-			// int y= gety();
-			// if (x>0)
-			// 	x--;
-			// else{
-			// 	if(y>0){
-			// 		y--;
-			// 		x=79;
-			// 	}
-			// }
-			// setcoords(x, y);
-			// updatecursor(0);
-		}
+			
+			 int x=getx(); //get coordinates
+			 int y= gety();
+			 if(x==0 && y==0);
+			 else
+				x--; //go back
+
+			setcoords(x, y);
+			putc(' '); //print space
+			setcoords(x,y); //go back to overwrite
+	}
 		else if (shiftset || capset){
-		buffer[i]=(keyshiftchar[key]);
+		buffer[i]=(keyshiftchar[key]); //put in buffer
 		i++;
-		if (cursor <0)
+		if (cursor <0) //make sure cursor is in correct spot
 			cursor++;
-		//putc(keyshiftchar[key]);
+		if(keyshiftchar[key] != '\0')
+		putc(keyshiftchar[key]); //print
 	}
 		else{	
 		buffer[i]=(keychar[key]);
 		i++;
 		if(cursor<0)
 			cursor ++;
-
-		//putc(keychar[key]);
+		if(keychar[key] != '\0')
+		putc(keychar[key]);
 		}
 		
-	} //check if release 
-if(i==0 ){
-savey= gety();
-savex= getx();
-}	
+	} 
 
-for(j=0; j<128; j++){
-	if(buffer[j] != '\0')
-	putc(buffer[j]);
-}
+	buffer[128]='\n';
+
 updatecursor(cursor);
 
-setcoords(savex,savey); 
-//keyboardread(0, readbuffer, 80);
+
 	send_eoi(1); //end interrupt
 sti();
 }

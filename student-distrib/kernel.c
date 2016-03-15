@@ -186,6 +186,9 @@ pageenable();
 	
 	enable_irq(2);
 	sti();
+	
+	// for (x=0; x<128; x++)
+	// printf("%c", string[x]);
 
 	// SET_IDT_ENTRY(idt[0x28], reserved);
 	// enable_irq(8);
