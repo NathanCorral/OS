@@ -175,7 +175,7 @@ printf("%d \n", x);
 x=10;
 printf("%d \n", x);
 
-
+x=10/0;
 	/* Init the PIC */
 	i8259_init();
 	rtc_init(); //initialize rtc
