@@ -38,8 +38,12 @@ return screen_x;
 
 //sets coordinates within screen after checking if valid
 void setcoords(int x, int y){
-while (x<0)
-	x++;
+if(x<0){
+
+	y--;
+	x= 0;
+	
+}
 while (x>=NUM_COLS)
 	x--;
 while (y<0)
@@ -253,13 +257,13 @@ putc(uint8_t c)
         // screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
     }
 
-    if(screen_x== NUM_COLS){
-    	screen_x=0;
-    	if(screen_y==NUM_ROWS-1)
-    		scroll();
-    	else
-    		screen_y++;
-    }
+    // if(screen_x== NUM_COLS-1){
+    // 	screen_x=0;
+    // 	if(screen_y==NUM_ROWS-1)
+    // 		scroll();
+    // 	else
+    // 		screen_y++;
+    // }
     // if(screen_y==NUM_ROWS-1 && screen_x==NUM_COLS){ //if on last line and get to end of line, scroll
     // 	scroll();
     // 	screen_x=0;

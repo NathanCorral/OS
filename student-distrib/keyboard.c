@@ -45,6 +45,8 @@ static uint8_t keyshiftchar [64]={
  static uint8_t ctrlset=0; //for later
  static uint8_t shiftset=0;
   static uint8_t capset=0;
+  int savex=0;
+  int savey=0;
 char buffer[128];
 //char readbuffer[128];
 // static uint8_t altset=0; //for later
@@ -67,11 +69,22 @@ void keyboardopen(){
 
 }
 
+int32_t keyboardwrite(const unsigned char*buf, int32_t nbytes){
+	int j=0;
+	int successes=0;
 
-int32_t keyboardread(int32_t fd, char* buf, int32_t nbytes){
+	for(j=0; j<nbytes; j++){
+		putc(buf[j]);
+		successes++;
+	}
+return successes;
+}
+
+
+int32_t keyboardread( char* buf, int32_t nbytes){
 int j=0;
 int bytesread=0;
-while(j<nbytes && buffer[j] != '\0'){
+while(j<nbytes && buffer[j] != '\0' && buffer[j--] !='\n'){
 buf[j]= buffer[j];
 bytesread++;
 j++;
@@ -85,9 +98,13 @@ for(j=0; j<nbytes; j++){
 	putc(buf[j]);
 }
 
-int y=gety();
-setcoords(0, y);
+// int y=gety();
+// setcoords(0, y);
 return bytesread;
+}
+
+int32_t keyboardclose(){
+	return 0;
 }
 
 void keyboard_handle(){
@@ -101,7 +118,10 @@ updatecursor(cursor);
 	 	shiftset=1;
 	 else if (key== RELEASE(LEFTSHIFT) || key== RELEASE(RIGHTSHIFT))
 	 	shiftset=0;
-if (i>=80){ 
+	
+if (i>=128){ 
+	while(key != ENTER);
+	putc('\n');
 	i=0;
 	for(j=0; j<128; j++)
 	buffer[j]='\0';
@@ -169,15 +189,18 @@ if (i>=80){
 		}
 		
 	} //check if release 
-	
+if(i==0 ){
+savey= gety();
+savex= getx();
+}	
 
 for(j=0; j<128; j++){
 	if(buffer[j] != '\0')
 	putc(buffer[j]);
 }
 updatecursor(cursor);
-int y= gety();
-setcoords(0,y);
+
+setcoords(savex,savey); 
 //keyboardread(0, readbuffer, 80);
 	send_eoi(1); //end interrupt
 sti();
