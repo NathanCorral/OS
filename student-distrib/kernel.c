@@ -169,13 +169,13 @@ pageinit();  //initialize and enable paging
 pageenable();
 
 //paging test
-int x;
-x=5;
-printf("%d \n", x);
-x=10;
-printf("%d \n", x);
+// int x;
+// x=5;
+// printf("%d \n", x);
+// x=10;
+// printf("%d \n", x);
 
-x=10/0;
+// x=10/0;
 	/* Init the PIC */
 	i8259_init();
 	rtc_init(); //initialize rtc
