@@ -100,6 +100,7 @@ void scroll(){
 		}
 	}
 	else{
+		printf("Scrolling Down");
 	
 		 outb(0x0D, 0x3D4); 
 	     outb((unsigned char)(offset&0xFF), 0x3D5); 
@@ -117,6 +118,7 @@ void scroll(){
 void scroll_up(){
 	offset -= NUM_COLS;
 	if(offset > 0){
+		printf("Scrolling up");
 		outb(0x0D, 0x3D4); 
 		outb((unsigned char)(offset&0xFF), 0x3D5); 
 		outb(0x0C, 0x3D4); 
