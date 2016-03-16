@@ -14,6 +14,7 @@ static int screen_x;
 static int screen_y;
 static char* video_mem = (char *)VIDEO;
 static unsigned int offset = 0;
+static int scrolled;
 /*
 * void clear(void);
 *   Inputs: void
@@ -100,7 +101,7 @@ void scroll(){
 		}
 	}
 	else{
-		printf("Scrolling Down");
+		scrolled++;
 	
 		 outb(0x0D, 0x3D4); 
 	     outb((unsigned char)(offset&0xFF), 0x3D5); 
@@ -108,17 +109,20 @@ void scroll(){
 	     outb((unsigned char)((offset>>8)&0xFF), 0x3D5);
 
 	    video_mem += (NUM_COLS << 1);
+	    /*
 		for(x=0; x<NUM_COLS; x++){
 			*(uint8_t *)(video_mem+ ((NUM_COLS*(NUM_ROWS-1)+x)<<1))= 0;
 		}
+		*/
 		updatecursor(0);
 	}
 }
 
 void scroll_up(){
-	offset -= NUM_COLS;
-	if(offset > 0){
-		printf("Scrolling up");
+	
+	if(scrolled > 0){
+		scrolled--;
+		offset -= NUM_COLS;
 		outb(0x0D, 0x3D4); 
 		outb((unsigned char)(offset&0xFF), 0x3D5); 
 		outb(0x0C, 0x3D4); 
@@ -127,8 +131,6 @@ void scroll_up(){
 		video_mem -= (NUM_COLS << 1);
 		updatecursor(0);
 	}
-	else
-		offset += NUM_COLS;
 }
 
 //print cursor to current screen position with offset x
