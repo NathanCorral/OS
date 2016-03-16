@@ -13,4 +13,6 @@ void terminal_backspace();
 
 void update_terminal(int screen_x, int screen_y);
 
+void terminal_scroll_up();
+
 #endif

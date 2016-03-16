@@ -96,3 +96,7 @@ void update_terminal(screen_x, screen_y){
 	x = screen_x;
 	y = screen_y;
 }
+
+void terminal_scroll_up(){
+	scroll_up();
+}

@@ -21,6 +21,7 @@ int32_t getx();
 void updatecursor(int x);
 void update_screen(int x, int y, int cursor);
 void back_space();
+void scroll_up();
 
 void* memset(void* s, int32_t c, uint32_t n);
 void* memset_word(void* s, int32_t c, uint32_t n);

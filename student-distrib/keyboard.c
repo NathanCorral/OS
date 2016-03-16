@@ -88,20 +88,24 @@ void keyboardopen(){
 
 int keyboardread(char* buf, int nbytes){
 	int bytesread=0;
-	int count = nbytes;
-	long unsigned flags;
+	char c;
 
 	if(buf == NULL)
 		return -1;		// -EINVAL
+	// Wait for input
+	while(buf_empty(start,end));
 
-	spin_lock_irqsave(lock, flags);
+	// Keep writing until we hit a new line
+	c = stdin[buf_incidx(start)];
+	while( c != '\n'){
+		buf[bytesread++] = c;
+		// Wait for new input
+		while(buf_empty(start,end));
 
-	while(!buf_empty(start, end) && (count > 0)){
-		buf[bytesread++] = stdin[buf_incidx(start)];
-		count--;
+		c = stdin[buf_incidx(start)];
 	}
 
-	spin_unlock_irqrestore(lock, flags);
+	buf[bytesread++] = c;
 
 	return bytesread;
 }
@@ -178,9 +182,18 @@ void keyboard_handle(){
 			break;
 
 		case ENTER :
+			// Throw away last character if stdin is full and
+			// replace it with new line
+			if(buf_full(start,end))
+				buf_incidx(start);
+
 			stdin[buf_incidx(end)] = '\n';
 			terminal_enter();
 			terminal_input();
+			break;
+
+		case UPARROW:
+			terminal_scroll_up();
 			break;
 
 		// Now that we have handled all special inputs

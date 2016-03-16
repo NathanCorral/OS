@@ -114,6 +114,21 @@ void scroll(){
 	}
 }
 
+void scroll_up(){
+	offset -= NUM_COLS;
+	if(offset > 0){
+		outb(0x0D, 0x3D4); 
+		outb((unsigned char)(offset&0xFF), 0x3D5); 
+		outb(0x0C, 0x3D4); 
+		outb((unsigned char)((offset>>8)&0xFF), 0x3D5);
+
+		video_mem -= (NUM_COLS << 1);
+		updatecursor(0);
+	}
+	else
+		offset += NUM_COLS;
+}
+
 //print cursor to current screen position with offset x
 void updatecursor(int x){
 
