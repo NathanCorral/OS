@@ -4,27 +4,6 @@
 #include "spinlock.h"
 #include "i8259.h"
 
-#define LEFTCTRL 0x1D
-#define LEFTALT 0x38
-#define LEFTSHIFT 0x2A
-#define RIGHTSHIFT 0x36
-#define CAPS 0x3A
-
-#define LEFTARROW 0x4B
-#define RIGHTARROW 0x4D
-#define UPARROW 0x48
-#define DOWNARROW 0x50
-
-#define ENTER 0x1C 
-#define BACKSPACE 0x0E
-#define DELETE 0x53
-#define SPACE 0x39
-#define TAB 0x0F
-#define ESCAPE 0x01
-#define PORT 0x60
-#define LKEY 0x26
-#define ALLRELEASE 0x59	
-
 #define RELEASE(key) (key |0x80)
 
 
@@ -192,10 +171,6 @@ void keyboard_handle(){
 			terminal_input();
 			break;
 
-		case UPARROW:
-			terminal_scroll_up();
-			break;
-
 		// Now that we have handled all special inputs
 		default :
 			if(buf_full(start, end))
@@ -204,8 +179,11 @@ void keyboard_handle(){
 			if(key >= ALLRELEASE)
 				break;  // Release key
 
+			// Check if key is in array
+			if(key >= 64)
+				key_input = key;
 			// The key is valid so we find the input
-			if(shiftset || capset)
+			else if(shiftset || capset)
 				key_input = keyshiftchar[key];
 			else
 				key_input = keychar[key];
@@ -227,10 +205,8 @@ void keyboard_handle(){
 	send_eoi(1);
 	sti();
 }
+
 /*
-=======
-
-
 //#include "lib.h"
 #include "keyboard.h"
 #include "i8259.h"

@@ -2,6 +2,7 @@
 #include "terminal.h"
 #include "lib.h"
 #include "spinlock.h"
+#include "keyboard.h"
 
 
 int x, y, min_x, cursor, handle_inputs;
@@ -28,6 +29,7 @@ void terminal_shell(){
 	//unsigned long flags;
 	x = 0;
 	y = 0;
+	clear();
 	update_screen(x, y, cursor);
 	//printf("[root@no_directory]# ");
 	min_x = x;
@@ -69,6 +71,14 @@ void terminal_ctr(char command){
 			y = 0;
 			break;
 
+		case UPARROW:
+			scroll_up();
+			break;
+
+		case DOWNARROW:
+			scroll();
+			break;
+
 		// Easy to add more commands for later
 	}
 }
@@ -97,6 +107,3 @@ void update_terminal(screen_x, screen_y){
 	y = screen_y;
 }
 
-void terminal_scroll_up(){
-	scroll_up();
-}

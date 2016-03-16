@@ -7,7 +7,10 @@
 #define NUM_COLS 80
 #define NUM_ROWS 25
 #define ATTRIB 0x7
-#define VIDEO_SIZE 0x4000 - (NUM_COLS)*(NUM_ROWS) << 1 // (4 kB - space to store one screen)
+ // 0xFA0 is 4000 Bytes, the size of video memory
+#define VIDEO_SIZE 0x0FA0 - ((NUM_COLS)*(NUM_ROWS) << 1) // (4 kB - space to store one screen)
+#define SCROLL_MAX VIDEO_SIZE
+ // Right now scroll max is 0 since we only have enough video memory for 1 screen
 
 
 static int screen_x;
@@ -26,6 +29,8 @@ void
 clear(void)
 {
     int32_t i;
+    scrolled = 0;
+
     for(i=0; i<NUM_ROWS*NUM_COLS; i++) {
         *(uint8_t *)(video_mem + (i << 1)) = ' ';
        *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
@@ -50,6 +55,7 @@ void back_space(){
 }
 
 void update_screen(int x, int y, int cursor){
+	// Save updating for only when we need it
 	screen_x = x;
 	screen_y = y;
 	updatecursor(cursor);
@@ -86,21 +92,13 @@ screen_y=y;
 //moves all printed text up a row and clears bottom row
 void scroll(){
 	int x, y;
+
+
 	offset += NUM_COLS;
-	if(offset >= VIDEO_SIZE){
-		// We have done all the scrolling in memory we can
-		for(y=0; y<NUM_ROWS-1; y++){
-			for(x=0; x<NUM_COLS; x++){
-			//move each row up
-			*(uint8_t *)(video_mem+ ((NUM_COLS*y+x)<<1))=*(uint8_t *)(video_mem+ ((NUM_COLS*(y+1)+x)<<1));
-			}
-		}
-		//clear out last line
-		for(x=0; x<NUM_COLS; x++){
-			*(uint8_t *)(video_mem+ ((NUM_COLS*(NUM_ROWS-1)+x)<<1))= 0;
-		}
-	}
-	else{
+
+
+	if(scrolled < SCROLL_MAX){
+
 		scrolled++;
 	
 		 outb(0x0D, 0x3D4); 
@@ -114,7 +112,24 @@ void scroll(){
 			*(uint8_t *)(video_mem+ ((NUM_COLS*(NUM_ROWS-1)+x)<<1))= 0;
 		}
 		*/
-		updatecursor(0);
+		updatecursor(0);		
+	}
+
+	else{
+		// We have done all the scrolling in memory we can
+		for(y=0; y<NUM_ROWS-1; y++){
+			for(x=0; x<NUM_COLS; x++){
+			//move each row up
+			*(uint8_t *)(video_mem+ ((NUM_COLS*y+x)<<1))=*(uint8_t *)(video_mem+ ((NUM_COLS*(y+1)+x)<<1));
+			}
+		}
+		//clear out last line
+		for(x=0; x<NUM_COLS; x++){
+			*(uint8_t *)(video_mem+ ((NUM_COLS*(NUM_ROWS-1)+x)<<1))= 0;
+		}
+		screen_x = 0;
+		screen_y = NUM_ROWS-1;
+		update_terminal(screen_x, screen_y);	
 	}
 }
 
