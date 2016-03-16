@@ -94,12 +94,7 @@ while(j<nbytes){
 	buf[j]='\0';
 	j++;
 }
-for(j=0; j<nbytes; j++){
-	putc(buf[j]);
-}
 
-// int y=gety();
-// setcoords(0, y);
 return bytesread;
 }
 
@@ -200,7 +195,9 @@ else{
 		if(keychar[key] != '\0')
 		putc(keychar[key]);
 		}
-		
+// 		char my[128];
+// keyboardread(my, 128);
+// keyboardwrite(my, 128);
 	} 
 
 	buffer[128]='\n';
