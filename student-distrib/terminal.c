@@ -29,7 +29,7 @@ void terminal_shell(){
 	x = 0;
 	y = 0;
 	update_screen(x, y, cursor);
-	printf("[root@no_directory]# ");
+	//printf("[root@no_directory]# ");
 	min_x = x;
 	while(1){
 		update_screen(x, y, cursor);
@@ -45,7 +45,7 @@ void terminal_shell(){
 			}
 			handle_inputs = 0;
 			if(print_dir == 1){
-				printf("[root@no_directory]# ");
+				//printf("[root@no_directory]# ");
 				min_x = x;
 				print_dir = 0;
 			}
