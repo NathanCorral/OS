@@ -1,4 +1,222 @@
 
+#include "terminal.h"
+#include "keyboard.h"
+#include "spinlock.h"
+#include "i8259.h"
+
+#define LEFTCTRL 0x1D
+#define LEFTALT 0x38
+#define LEFTSHIFT 0x2A
+#define RIGHTSHIFT 0x36
+#define CAPS 0x3A
+
+#define LEFTARROW 0x4B
+#define RIGHTARROW 0x4D
+#define UPARROW 0x48
+#define DOWNARROW 0x50
+
+#define ENTER 0x1C 
+#define BACKSPACE 0x0E
+#define DELETE 0x53
+#define SPACE 0x39
+#define TAB 0x0F
+#define ESCAPE 0x01
+#define PORT 0x60
+#define LKEY 0x26
+#define ALLRELEASE 0x59	
+
+#define RELEASE(key) (key |0x80)
+
+
+#define BUF_SIZE 128
+
+#define buf_used(start,end) ((start) <= (end) ? \
+				  ((end) - (start))  \
+				: (buf_size + (end) - (start)))
+
+#define buf_room(start,end) (BUF_SIZE - buf_used(start,end) - 1)
+#define buf_empty(start, end) ((start) == (end))
+#define buf_full(start, end) ((((end)+1)%BUF_SIZE) == (start))
+#define buf_incidx(idx) ((idx) = ((idx)+1) % BUF_SIZE)
+
+char stdin[BUF_SIZE];
+int start, end;
+
+
+static uint8_t keychar [64]={
+'\0', '\0', '1','2','3','4','5','6','7','8','9','0','-','=','\0','\0',
+'q','w','e','r','t','y','u','i','o','p','[',']','\0','\0','a','s',
+'d','f','g','h','j','k','l',';','\'', '`', '\0','\\', 'z','x','c','v',
+'b','n','m',',','.','/', '\0','\0','\0', ' ', '\0','\0','\0','\0','\0','\0'
+};
+static uint8_t keyshiftchar [64]={
+'\0', '\0', '!','@','#','$','%','^','&','*','(',')','_','+','\0','\0',
+'Q','W','E','R','T','Y','U','I','O','P','{','}','\0','\0','A','S',
+'D','F','G','H','J','K','L',':','\'', '~', '\0','|', 'Z','X','C','V',
+'B','N','M','<','>','?', '\0','\0','\0', ' ', '\0','\0','\0','\0','\0','\0'
+};
+
+
+
+static spinlock_t lock = SPINLOCK_UNLOCKED;
+
+
+static uint8_t ctrlset=0; 
+static uint8_t shiftset=0;
+static uint8_t capset=0;
+static uint8_t altset = 0;
+
+
+// Get next char from input
+char getc(){
+	if(buf_empty(start,end))
+		return -1; // error check
+	char c;
+	unsigned long flags;
+	
+	spin_lock_irqsave(lock, flags);
+	c = stdin[buf_incidx(start)];
+	spin_unlock_irqrestore(lock, flags);
+	return c;
+}
+
+void keyboardopen(){
+	end = 0;
+	start = 0;
+	enable_irq(1);
+}
+
+int keyboardread(char* buf, int nbytes){
+	int bytesread=0;
+	int count = nbytes;
+	long unsigned flags;
+
+	if(buf == NULL)
+		return -1;		// -EINVAL
+
+	spin_lock_irqsave(lock, flags);
+
+	while(!buf_empty(start, end) && (count > 0)){
+		buf[bytesread++] = stdin[buf_incidx(start)];
+		count--;
+	}
+
+	spin_unlock_irqrestore(lock, flags);
+
+	return bytesread;
+}
+
+int keyboardwrite(const unsigned char*buf, int nbytes){
+	int successes=0;
+	int count = nbytes;
+	long unsigned flags;
+
+
+	if(buf == NULL)
+		return -1;		// -EINVAL
+
+	spin_lock_irqsave(lock, flags);
+
+	while(!buf_full(start, end) && (count > 0)){
+		stdin[buf_incidx(end)] = buf[successes++];
+		count--;
+	}
+
+	spin_unlock_irqrestore(lock, flags);
+
+return successes;
+}
+
+
+void keyboard_handle(){
+
+	cli();
+
+	uint8_t key;
+	uint8_t key_input;
+
+	key = inb(PORT);
+
+	spin_lock(lock);
+
+	switch(key){
+		case LEFTSHIFT :
+		case RIGHTSHIFT :
+			shiftset=1;
+			break;
+
+		case RELEASE(LEFTSHIFT) :
+		case RELEASE(RIGHTSHIFT) :
+			shiftset = 0;
+			break;
+
+		case LEFTCTRL :
+			ctrlset=1;
+			break;
+
+		case RELEASE(LEFTCTRL) :
+			ctrlset = 0;
+			break;
+
+		case CAPS :
+			capset = ~capset;
+			break;
+
+		case LEFTALT :
+			altset = 1;
+			break;
+
+		case RELEASE(LEFTALT) :
+			altset = 0;
+			break;
+
+		case BACKSPACE :
+			if(!buf_empty(start,end)){
+				end--;
+			}
+			terminal_backspace();
+			break;
+
+		case ENTER :
+			stdin[buf_incidx(end)] = '\n';
+			terminal_enter();
+			terminal_input();
+			break;
+
+		// Now that we have handled all special inputs
+		default :
+			if(buf_full(start, end))
+				break; // Do nothing for now.  May want to report error
+
+			if(key >= ALLRELEASE)
+				break;  // Release key
+
+			// The key is valid so we find the input
+			if(shiftset || capset)
+				key_input = keyshiftchar[key];
+			else
+				key_input = keychar[key];
+
+			
+			// Control keys are not displayed and are used for commands.
+			if(ctrlset)
+				terminal_ctr(key_input);
+			
+
+			else{
+				stdin[buf_incidx(end)] = key_input;
+				terminal_input();
+			}
+
+	}
+
+	spin_unlock(lock);
+	send_eoi(1);
+	sti();
+}
+/*
+=======
+
 
 //#include "lib.h"
 #include "keyboard.h"
@@ -209,3 +427,5 @@ updatecursor(cursor);
 sti();
 }
 
+>>>>>>> .r13978
+*/

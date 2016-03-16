@@ -14,10 +14,13 @@ int8_t *itoa(uint32_t value, int8_t* buf, int32_t radix);
 int8_t *strrev(int8_t* s);
 uint32_t strlen(const int8_t* s);
 void clear(void);
+void clear_re(void);
 void setcoords(int x, int y);
 int32_t gety();
 int32_t getx();
 void updatecursor(int x);
+void update_screen(int x, int y, int cursor);
+void back_space();
 
 void* memset(void* s, int32_t c, uint32_t n);
 void* memset_word(void* s, int32_t c, uint32_t n);
@@ -145,5 +148,6 @@ do {                                    \
 			: "memory", "cc"        \
 			);                      \
 } while(0)
+
 
 #endif /* _LIB_H */

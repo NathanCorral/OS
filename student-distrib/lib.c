@@ -7,11 +7,13 @@
 #define NUM_COLS 80
 #define NUM_ROWS 25
 #define ATTRIB 0x7
+#define VIDEO_SIZE 0x4000 - (NUM_COLS)*(NUM_ROWS) << 1 // (4 kB - space to store one screen)
+
 
 static int screen_x;
 static int screen_y;
 static char* video_mem = (char *)VIDEO;
-
+static unsigned int offset = 0;
 /*
 * void clear(void);
 *   Inputs: void
@@ -27,6 +29,29 @@ clear(void)
         *(uint8_t *)(video_mem + (i << 1)) = ' ';
        *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
     }
+}
+
+void back_space(){
+	if(screen_x > 0){
+		screen_x--;
+		putc(' ');
+		screen_x--;
+	}
+	else if(screen_y > 0){
+		screen_y--;
+		screen_x = NUM_COLS - 2;
+		putc(' ');
+		// Because it moves to the next line after putchar
+		screen_y--;
+		screen_x = NUM_COLS - 2;
+	}
+	update_terminal(screen_x, screen_y);
+}
+
+void update_screen(int x, int y, int cursor){
+	screen_x = x;
+	screen_y = y;
+	updatecursor(cursor);
 }
 
 int32_t gety(){
@@ -60,22 +85,39 @@ screen_y=y;
 //moves all printed text up a row and clears bottom row
 void scroll(){
 	int x, y;
-	for(y=0; y<NUM_ROWS-1; y++){
+	offset += NUM_COLS;
+	if(offset >= VIDEO_SIZE){
+		// We have done all the scrolling in memory we can
+		for(y=0; y<NUM_ROWS-1; y++){
+			for(x=0; x<NUM_COLS; x++){
+			//move each row up
+			*(uint8_t *)(video_mem+ ((NUM_COLS*y+x)<<1))=*(uint8_t *)(video_mem+ ((NUM_COLS*(y+1)+x)<<1));
+			}
+		}
+		//clear out last line
 		for(x=0; x<NUM_COLS; x++){
-		//move each row up
-		*(uint8_t *)(video_mem+ ((NUM_COLS*y+x)<<1))=*(uint8_t *)(video_mem+ ((NUM_COLS*(y+1)+x)<<1));
+			*(uint8_t *)(video_mem+ ((NUM_COLS*(NUM_ROWS-1)+x)<<1))= 0;
 		}
 	}
-	//clear out last line
-	for(x=0; x<NUM_COLS; x++){
-		*(uint8_t *)(video_mem+ ((NUM_COLS*(NUM_ROWS-1)+x)<<1))= 0;
-	}
+	else{
 	
+		 outb(0x0D, 0x3D4); 
+	     outb((unsigned char)(offset&0xFF), 0x3D5); 
+	     outb(0x0C, 0x3D4); 
+	     outb((unsigned char)((offset>>8)&0xFF), 0x3D5);
+
+	    video_mem += (NUM_COLS << 1);
+		for(x=0; x<NUM_COLS; x++){
+			*(uint8_t *)(video_mem+ ((NUM_COLS*(NUM_ROWS-1)+x)<<1))= 0;
+		}
+		updatecursor(0);
+	}
 }
 
 //print cursor to current screen position with offset x
 void updatecursor(int x){
-int position= (screen_y*NUM_COLS)+screen_x + x;
+
+int position= (screen_y*NUM_COLS)+screen_x + x + offset;
 
  outb(0x0F, 0x3D4); 
      outb((unsigned char)(position&0xFF), 0x3D5); 
@@ -260,7 +302,7 @@ putc(uint8_t c)
         // screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
     }
 
-    if(screen_x== NUM_COLS-1){
+    if(screen_x== (NUM_COLS-1) || screen_x==NUM_COLS){
     	screen_x=0;
     	if(screen_y==NUM_ROWS-1)
     		scroll();
@@ -271,10 +313,7 @@ putc(uint8_t c)
     	scroll();
     	screen_x=0;
     }
-    else if( screen_x==NUM_COLS){
-    	screen_y++;
-    	screen_x=0;
-    }
+    update_terminal(screen_x, screen_y);
 }
 
 /*
