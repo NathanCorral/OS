@@ -276,13 +276,15 @@ void keyboardopen(){
 
 }
 
-int32_t keyboardwrite(const unsigned char*buf, int32_t nbytes){
+int32_t keyboardwrite(const char*buf, int32_t nbytes){
 	int j=0;
 	int successes=0;
 
 	for(j=0; j<nbytes; j++){
+		if(buf[j] != '\0'){
 		putc(buf[j]);
 		successes++;
+	}
 	}
 return successes;
 }
@@ -402,12 +404,12 @@ else{
 		if(keychar[key] != '\0')
 		putc(keychar[key]);
 		}
-// 		char my[128];
-// keyboardread(my, 128);
-// keyboardwrite(my, 128);
+		char my[128];
+keyboardread(my, 128);
+keyboardwrite(my, 128);
 	} 
 
-	buffer[128]='\n';
+	buffer[127]='\n';
 
 updatecursor(cursor);
 
