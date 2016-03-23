@@ -86,7 +86,7 @@ void terminal_ctr(char command){
 void terminal_input(){
 	// handle_inputs will be ignored during user programs and output
 	// once we finish
-
+	putc(getc());
 	//spin_lock(lock);
 	handle_inputs++;
 	//spin_unlock(lock);	
