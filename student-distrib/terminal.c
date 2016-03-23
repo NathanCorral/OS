@@ -19,6 +19,7 @@ void termain_init(  ){
 	cursor = 0;
 	handle_inputs = 0;
 	print_dir = 0;
+	update_screen(x, y, cursor);
 	// open keyboard file
 	// set starting directory
 }
@@ -86,10 +87,14 @@ void terminal_ctr(char command){
 void terminal_input(){
 	// handle_inputs will be ignored during user programs and output
 	// once we finish
-	putc(getc());
+	char c;
+	c = getc();
+	if(c != -1)
+		putc(c);
 	//spin_lock(lock);
 	handle_inputs++;
-	//spin_unlock(lock);	
+	//spin_unlock(lock);
+	update_screen(x,y,0);
 }
 
 void terminal_backspace(){

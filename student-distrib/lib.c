@@ -52,6 +52,7 @@ void back_space(){
 		screen_x = NUM_COLS - 2;
 	}
 	update_terminal(screen_x, screen_y);
+	updatecursor(0);
 }
 
 void update_screen(int x, int y, int cursor){
@@ -348,6 +349,7 @@ putc(uint8_t c)
     	screen_x=0;
     }
     update_terminal(screen_x, screen_y);
+	updatecursor(0);
 }
 
 /*

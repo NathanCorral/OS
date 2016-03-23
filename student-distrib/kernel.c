@@ -206,6 +206,7 @@ pageenable();
 
 	/* Execute the first program (`shell') ... */
 	//while(1);
+	termain_init();
 
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");

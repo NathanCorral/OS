@@ -53,9 +53,7 @@ char getc(){
 	char c;
 	unsigned long flags;
 	
-	spin_lock_irqsave(lock, flags);
 	c = stdin[buf_incidx(start)];
-	spin_unlock_irqrestore(lock, flags);
 	return c;
 }
 
