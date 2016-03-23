@@ -6,6 +6,7 @@
 #define _LIB_H
 
 #include "types.h"
+#include "terminal.h"
 
 int32_t printf(int8_t *format, ...);
 void putc(uint8_t c);
@@ -21,6 +22,7 @@ int32_t getx();
 void updatecursor(int x);
 void update_screen(int x, int y, int cursor);
 void back_space();
+void scroll();
 void scroll_up();
 
 void* memset(void* s, int32_t c, uint32_t n);
