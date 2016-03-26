@@ -15,6 +15,8 @@
 #include "rtcirq.h"
  #include "paging.h"
  #include "interrupts.h"
+ #include "terminal.h"
+ #include "files.h"
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
@@ -70,6 +72,9 @@ entry (unsigned long magic, unsigned long addr)
 			printf("Module %d loaded at address: 0x%#x\n", mod_count, (unsigned int)mod->mod_start);
 			printf("Module %d ends at address: 0x%#x\n", mod_count, (unsigned int)mod->mod_end);
 			printf("First few bytes of module:\n");
+			// Open Filesystem
+			fsopen(mod->mod_start, mod->mod_end);
+
 			for(i = 0; i<16; i++) {
 				printf("0x%x ", *((char*)(mod->mod_start+i)));
 			}
@@ -158,15 +163,18 @@ entry (unsigned long magic, unsigned long addr)
 		ltr(KERNEL_TSS);
 	}
 
-	
 interruptinit(); //initialize interrupts
+
 
 	lidt(idt_desc_ptr); //load idt
 	clear(); //clear again just to be sure
+
 	
 
 pageinit();  //initialize and enable paging
-pageenable();
+//pageenable();
+
+
 
 //paging test
 // int x;
@@ -182,7 +190,7 @@ pageenable();
 	keyboardopen();
 //enable interrupts
 	cli();
-	enable_irq(8);
+	//enable_irq(8);
 	
 	enable_irq(2);
 	sti();
@@ -206,6 +214,7 @@ pageenable();
 
 	/* Execute the first program (`shell') ... */
 	//while(1);
+
 	termain_init();
 
 	/* Spin (nicely, so we don't chew up cycles) */
