@@ -7,6 +7,7 @@ int bb; //boot block;
 
 inode_t * inodes; //array of inodes
 dentry_t * dentries; //array of dentries
+uint8_t * datablocks;
 boot_info info; //boot block info
 
 
@@ -32,17 +33,37 @@ int reads; //number of names read from system
 
 //this opens the file system
 
-int fsopen(int start, int end){
+int fsopen(uint32_t start_addr, uint32_t end_addr){
+	int i;
 	if(openflag)
 		return -1;
-	bb= start; //this is the boot block
-	memcpy( &info, (void *)bb, 64); //this gets the data from the boot block
-	inodes= (inode_t *) (bb+0x1000); //this is where inodes start (1 page after boot block)
-	dentries=(dentry_t *)(bb+64); //this is the directories given in boot block
-	datastart= bb+ (info.inodes+1)*0x1000; //this is boot block + number of inodes * 1 page
+
+
+	info.start = (uint8_t *) start_addr;
+	info.size = end_addr - start_addr;
+
+	info.dentries = LITTLE_TO_BIG(info.start); // first entry
+	info.inodes = LITTLE_TO_BIG(info.start + 4); // second entry
+	info.datablocks = LITTLE_TO_BIG(info.start + 8); // third entry
+
+	dentries = (dentry_t *) (info.start + NEXT_ENTRY); //this is the directories given in boot block
+	inodes = (inode_t *) (info.start + NEXT_BLOCK); //this is where inodes start (1 page after boot block)
+	datablocks = (info.start + NEXT_BLOCK * (info.inodes + 1)); //this is boot block + number of inodes * 1 page
+
+	// Print out directory names to prove we can
+	for(i=0; i<(info.dentries); i++){
+		printf("%s\n", (dentries+i));
+	}
+
 	reads=0; //nothing read yet
 	openflag=1;
 	return 0;
+}
+
+uint32_t LITTLE_TO_BIG(uint8_t * addr){
+	uint32_t ret = 0;
+	ret = (*addr) | ((*(addr+1)) << 8) | ((*(addr+2)) << 16) | ((*(addr+3)) << 24);
+	return ret;
 }
 
 //check if open, then close
@@ -85,7 +106,7 @@ int dirwrite(){
 //reads the dentry by the name of the file
 //input is name and dentry
 //retuns 0 on succes, -1 on fail
-
+/*
 int read_dentry_by_name( const uint8_t * fname, dentry_t * dentry){
 int j=0;
 int length= strlen((int8_t*) fname);
@@ -234,5 +255,5 @@ int fstomem(const int8_t *fname, uint32_t address){
 	return 0;
 
 }
-
+*/
 
