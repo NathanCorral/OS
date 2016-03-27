@@ -192,7 +192,7 @@ pageinit();  //initialize and enable paging
 	/* Init the PIC */
 	i8259_init();
 	rtc_init(); //initialize rtc
-	keyboard_open();
+	keyboardopen();
 //enable interrupts
 	cli();
 	//enable_irq(8);
@@ -221,8 +221,8 @@ pageinit();  //initialize and enable paging
 	//while(1);
 
 	terminal_init();
-
-	test_mp3_2();
+	terminal_open();
+	//test_mp3_2();
 
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");

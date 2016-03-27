@@ -112,6 +112,8 @@ void keyboard_handle(){
 
 	cli();
 
+
+
 	uint8_t key;
 	uint8_t key_input;
 
@@ -193,6 +195,18 @@ void keyboard_handle(){
 
 			else{
 				stdin[buf_incidx(end)] = key_input;
+				stdin[127]= '\n';
+
+				// if( buf_incidx(end)>=127){
+				// 	if( key==ENTER ||(ctrlset==1 && key==LKEY)){
+				// 		// while(buf_incidx(end) != buf_incidx(start))
+				// 		// 	stdin[buf_incidx(end)]= '\0';
+				// 		;
+				// 	}
+				// 	else{
+				// 		break;
+				// 	}
+				// }
 				terminal_input();
 			}
 

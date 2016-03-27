@@ -110,6 +110,8 @@ void terminal_ctr(char command){
 			clear();
 			x = 0;
 			y = 0;
+			setcoords(x,y);
+			updatecursor(0);
 			break;
 
 		case UPARROW:
