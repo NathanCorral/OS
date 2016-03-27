@@ -18,6 +18,11 @@
  #include "terminal.h"
  #include "files.h"
 
+
+
+ //  FOR TESTING
+ #include "mp3.2_test.h" 
+
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
@@ -216,6 +221,8 @@ pageinit();  //initialize and enable paging
 	//while(1);
 
 	termain_init();
+
+	test_mp3_2();
 
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");

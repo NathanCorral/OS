@@ -7,13 +7,14 @@ int bb; //boot block;
 
 inode_t * inodes; //array of inodes
 dentry_t * dentries; //array of dentries
-uint8_t * datablocks;
+datablocks_t * datablocks; // array of datablocks
 boot_info info; //boot block info
 
 
 
-int datastart; //addr of 1st data block
+unsigned int datastart; //addr of 1st data block
 int reads; //number of names read from system
+
 
 //in discussion, suggested putting this index in dentry?
 
@@ -34,7 +35,7 @@ int reads; //number of names read from system
 //this opens the file system
 
 int fsopen(uint32_t start_addr, uint32_t end_addr){
-	int i;
+
 	if(openflag)
 		return -1;
 
@@ -42,28 +43,144 @@ int fsopen(uint32_t start_addr, uint32_t end_addr){
 	info.start = (uint8_t *) start_addr;
 	info.size = end_addr - start_addr;
 
-	info.dentries = LITTLE_TO_BIG(info.start); // first entry
-	info.inodes = LITTLE_TO_BIG(info.start + 4); // second entry
-	info.datablocks = LITTLE_TO_BIG(info.start + 8); // third entry
+	info.dentries = read_lit_endian(info.start); // first entry
+	info.inodes = read_lit_endian(info.start + 4); // second entry
+	info.datablocks = read_lit_endian(info.start + 8); // third entry
 
 	dentries = (dentry_t *) (info.start + NEXT_ENTRY); //this is the directories given in boot block
 	inodes = (inode_t *) (info.start + NEXT_BLOCK); //this is where inodes start (1 page after boot block)
-	datablocks = (info.start + NEXT_BLOCK * (info.inodes + 1)); //this is boot block + number of inodes * 1 page
+	datablocks = (datablocks_t *) (info.start + NEXT_BLOCK * (info.inodes + 1)); //this is boot block + number of inodes * 1 page
+	datastart = (unsigned int)(info.start + NEXT_BLOCK * (info.inodes + 1));
 
-	// Print out directory names to prove we can
-	for(i=0; i<(info.dentries); i++){
-		printf("%s\n", (dentries+i));
+	// READ_DENTRY_BY_NAME Test
+	/*
+	if(read_dentry_by_name(test, &test_d) == 0){
+		printf("Found test %s\n", test_d.fname);
+		//printf ("     type: %d\n", test_d.ftype);
+		printf("     inode: %d\n", test_d.inode);
 	}
+	else
+		printf("Could not find test\n");
+	*/
+
+	// READ_DENTRY_BY_INDEX Test
+	/*
+	if(read_dentry_by_index(1,&test_d) == 0){
+		printf("Found test %s\n", test_d.fname);
+		printf ("     type: %d\n", test_d.ftype);
+		printf("     inode: %d\n", test_d.inode);
+	}
+	else
+		printf("Copy not work\n");
+	*/
+
+
+	// This block shows the automatic conversion from little endian.
+	// It isnt important but im not sure how this automatic conversion takes place 
+	// when typecasting memory to a uint_32.
+	/*
+	printf("INODE 1\n");
+	printf("Length:  %d\n", inodes[1].size);
+	printf("Length:  0x%#x\n", inodes[1].size);
+	for(i = 0; i<16; i++) {
+		printf("0x%x ", *((((unsigned char*)(inodes+1))+i)));
+	}
+	*/
 
 	reads=0; //nothing read yet
 	openflag=1;
 	return 0;
 }
 
-uint32_t LITTLE_TO_BIG(uint8_t * addr){
+uint32_t read_lit_endian(uint8_t * addr){
 	uint32_t ret = 0;
 	ret = (*addr) | ((*(addr+1)) << 8) | ((*(addr+2)) << 16) | ((*(addr+3)) << 24);
 	return ret;
+}
+
+int divide_ceiling(uint32_t num, uint32_t den){
+	int ret = num/den;
+	if(num % den != 0)
+		ret++;
+	return ret;
+}
+
+int divide_floor(uint32_t num, uint32_t den){
+	int ret = num/den;
+	return ret;
+}
+
+void print_directory(){
+	int i;
+	printf("___File System Statistics___\n");
+	printf("Dentries = %d\n", info.dentries);
+	printf("Inodes = %d\n", info.inodes);
+	printf("DataBlocks = %d\n", info.datablocks);
+	printf("Directory List and Statistics:    \n");
+	for(i=0; i<(info.dentries); i++){
+		// Note for printing string we hand in address of string.
+		printf("%s", dentries[i].fname);
+		if((dentries+i)->ftype == 2){
+			printf("     type:  2");
+			printf("     inode#:  %d", dentries[i].inode);
+			printf("     size:   %d\n", inodes[dentries[i].inode].size);
+		}
+		else
+			printf("     type:  %d\n", dentries[i].ftype);
+	}
+}
+
+void read_data_test(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t length){
+	uint8_t *addr;
+	int location; //where in block
+	int curblock; //data block
+	int i;
+	int err;
+	int success = 0;
+
+	curblock = offset/NEXT_BLOCK;
+	location = offset % NEXT_BLOCK;
+	addr= (uint8_t *)(datastart+(inodes[inode].blocks[curblock])*0x1000+ location);
+	printf("Data read from Memory:");
+	for(i = 0; i < length; i++){
+		if(location>=0x1000){ //if location is not in block
+			location=0;
+			curblock++; //go to beginning of next block
+			if(inodes[inode].blocks[curblock] >= info.datablocks){
+				printf("BAD BLOCK\n");
+				break;
+			}
+			//start of next data block
+			addr= (uint8_t *)(datastart+(inodes[inode].blocks[curblock])*0x1000+ location);
+		}
+		if(success+offset>= inodes[inode].size)
+			break;
+		if(i%16 == 0)
+			printf("\n");
+		printf("0x%x ", *addr);
+		success++;
+		location++;
+		addr++;
+	}
+
+
+	err = read_data(inode, offset, buf, length);
+	if(err != length){
+		if(err == 0){
+			length = inodes[inode].size - offset;
+			printf("\nReached end of file.  Amount Read = %d", length);
+		}
+		else{
+			printf("Error value Returned = %d\n", err);
+			length = 0;
+		}
+	}
+	printf("\nData read from buffer:");
+	for(i=0; i<length; i++){
+		if(i%16 == 0)
+			printf("\n");
+		printf("0x%x ", buf[i]);
+	}
 }
 
 //check if open, then close
@@ -106,18 +223,19 @@ int dirwrite(){
 //reads the dentry by the name of the file
 //input is name and dentry
 //retuns 0 on succes, -1 on fail
-/*
-int read_dentry_by_name( const uint8_t * fname, dentry_t * dentry){
-int j=0;
-int length= strlen((int8_t*) fname);
-if( length <1 || length >MAX_NAMELENGTH) //test if valid name length
-	return -1;
 
-	for(j=0; j<MAX_FS_DENTRIES; j++){
-		if( length== strlen(dentries[j].fname)){ //test if even same length
+int read_dentry_by_name( const uint8_t * fname, dentry_t * dentry){
+	int j=0;
+	int length= strlen((int8_t*) fname);
+	if( length <1 || length >MAX_NAMELENGTH) //test if valid name length
+		return -1;
+
+	for(j=0; j<(info.dentries); j++){
+
+		if( length == strlen(dentries[j].fname) ){ //test if even same length
 			if(strncmp(dentries[j].fname, (int8_t *)fname, length)==0){ //compare
 				//found, get data and put it into the dentry
-				strcpy(dentry->fname, dentries[j].fname,strlen(dentries[j].fname);
+				strcpy(dentry->fname, dentries[j].fname);
 				dentry->inode= dentries[j].inode;
 				dentry->ftype=dentries[j].ftype;
 				return 0;
@@ -127,72 +245,82 @@ if( length <1 || length >MAX_NAMELENGTH) //test if valid name length
 	return -1; //not found
 }
 
+
 //searches by index
 //input is index and dentry
 //returns 0 on success, -1 on failure
 int read_dentry_by_index( uint32_t index, dentry_t * dentry){
-	if ( index>=MAX_FS_DENTRIES)
+	if ( index>=info.dentries || index < 0)
 		return -1; //invalid
-	strcpy(dentry->fname, dentries[index].fname,strlen(dentries[index].fname);
-				dentry->inode= dentries[index].inode;
-				dentry->ftype=dentries[index].ftype;
-				return 0;
+	strcpy(dentry->fname, dentries[index].fname);
+	dentry->inode= dentries[index].inode;
+	dentry->ftype=dentries[index].ftype;
+	return 0;
 }
 
 
 //reads the data from file
-//input is inode of file, the offset into the file, the buffer to copy to, and the length of read
+//input is inode of file, the offset into the inode file in Bytes, the buffer to copy to, and the length of read
 //output is -1 if fail, 0 if end of file, or number of bytes read otherwise
 int read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t length){
 
-int success=0; //bytes read
-int location; //where in block
-int curblock; //data block
-uint8_t * addr;
+	int ret; //return value of Bytes read or zero if we reach the end of the file
+	int success; // Bytes we will read
+	int count = 0; // Location on buffer
+	int location; //where in block
+	int curblock_idx; // inode index to the current block
+	int curblock; //data block
 
+	if(inode >= info.inodes || inode < 0) //invalid inode
+		return -1;
 
-if(inode >= info.inodes) //invalid inode
-	return -1;
+	// Other input error checks
+	// Not sure if this is necessary and we can assume valid inputs
+	if(offset < 0 || buf == NULL)
+		return -1;
 
-curblock= offset/0x1000; //starting data block
-if(inodes[inode].blocks[curblock] >= info.datablocks) 
-	return -1;
+	// Read offset is greater than file size
+	if(inodes[inode].size <= offset)
+		return -1;
 
-if(offset >= inodes[inode].size)
-	return 0; //end of file
+	curblock_idx = divide_floor(offset, NEXT_BLOCK);
+	location = offset - (curblock_idx * NEXT_BLOCK);
+	curblock = inodes[inode].blocks[curblock_idx];
 
+	// Check that block is valid
+	if(curblock >= info.datablocks)
+		return -1;
 
-location= offset % 0x1000; //starting spot in block
-
-
-//this is the address to read from
-addr= (uint8_t *)(datastart+(inodes[inode].blocks[curblock])*0x1000+ location);
-
-while( success<length){
-	if(location>=0x1000){ //if location is not in block
-		location=0;
-		curblock++; //go to beginning of next block
-		if(inodes[inode].blocks[curblock] >= info.datablocks) 
-			return -1;
-		//start of next data block
-		addr= (uint8_t *)(datastart+(inodes[inode].blocks[curblock])*0x1000+ location);
+	// We are going to read until the end of the file 
+	// so we want to return 0 
+	if(inodes[inode].size < (offset + length)){
+		success = inodes[inode].size - offset;
+		ret = 0;
 	}
-	//see if end of the file has been reached
-	if(success+offset>= inodes[inode].size)
-		return success;
+	// Otherwise we read all Bytes
+	else{
+		success = length;
+		ret = length;
+	}
 
-	//do the actual reading
-	buf[success]= *addr;
-	location++;
-	success++;
-	addr++;
+	while(count < success ){
+		// Write data
+		buf[count] = datablocks[curblock].data[location];
+		location++;
+		// Check move to next block
+		if(location >= NEXT_BLOCK){
+			location = 0;
+			curblock = inodes[inode].blocks[++curblock_idx];
+			// Check that new block is valid
+			if(curblock >= info.datablocks)
+				return -1;
+		}
+		count++;
+	}
+	return ret;
 
 }
-
-return success;
-
-
-}
+/*
 
 //reads file
 //input is file name, offset into file, buffer to copy to, length

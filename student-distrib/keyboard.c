@@ -51,7 +51,6 @@ char getc(){
 	if(buf_empty(start,end))
 		return -1; // error check
 	char c;
-	unsigned long flags;
 	
 	c = stdin[buf_incidx(start)];
 	return c;
