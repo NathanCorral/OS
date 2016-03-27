@@ -52,41 +52,6 @@ int fsopen(uint32_t start_addr, uint32_t end_addr){
 	datablocks = (datablocks_t *) (info.start + NEXT_BLOCK * (info.inodes + 1)); //this is boot block + number of inodes * 1 page
 	datastart = (unsigned int)(info.start + NEXT_BLOCK * (info.inodes + 1));
 
-	// READ_DENTRY_BY_NAME Test
-	/*
-	if(read_dentry_by_name(test, &test_d) == 0){
-		printf("Found test %s\n", test_d.fname);
-		//printf ("     type: %d\n", test_d.ftype);
-		printf("     inode: %d\n", test_d.inode);
-	}
-	else
-		printf("Could not find test\n");
-	*/
-
-	// READ_DENTRY_BY_INDEX Test
-	/*
-	if(read_dentry_by_index(1,&test_d) == 0){
-		printf("Found test %s\n", test_d.fname);
-		printf ("     type: %d\n", test_d.ftype);
-		printf("     inode: %d\n", test_d.inode);
-	}
-	else
-		printf("Copy not work\n");
-	*/
-
-
-	// This block shows the automatic conversion from little endian.
-	// It isnt important but im not sure how this automatic conversion takes place 
-	// when typecasting memory to a uint_32.
-	/*
-	printf("INODE 1\n");
-	printf("Length:  %d\n", inodes[1].size);
-	printf("Length:  0x%#x\n", inodes[1].size);
-	for(i = 0; i<16; i++) {
-		printf("0x%x ", *((((unsigned char*)(inodes+1))+i)));
-	}
-	*/
-
 	reads=0; //nothing read yet
 	openflag=1;
 	return 0;
@@ -110,6 +75,42 @@ int divide_floor(uint32_t num, uint32_t den){
 	return ret;
 }
 
+void test_read_dentry_by_name(const uint8_t *fname){
+	dentry_t test_d;
+	int err = read_dentry_by_name(fname, &test_d);
+	if(err == 0){
+		printf("Found file %s\n", test_d.fname);
+		if(test_d.ftype == 2){
+			printf("     type:  2\n");
+			printf("     inode#:  %d\n", test_d.inode);
+			printf("     size:   %d\n", inodes[test_d.inode].size);
+		}
+		else
+			printf("     type:  %d\n", test_d.ftype);
+	}
+	else if(err == -1)
+		printf("File \" %s \" does not exist\n", fname);
+	else if(err == -2)
+		printf("File Name \" %s \" is invalid\n", fname);
+}
+
+void test_read_dentry_by_index(uint32_t index){
+	dentry_t test_d;
+	int err = read_dentry_by_index(index, &test_d);
+	if(err == 0){
+		printf("Found file %s\n", test_d.fname);
+		if(test_d.ftype == 2){
+			printf("     type:  2\n");
+			printf("     inode#:  %d\n", test_d.inode);
+			printf("     size:   %d\n", inodes[test_d.inode].size);
+		}
+		else
+			printf("     type:  %d\n", test_d.ftype);
+	}
+	else if(err == -1)
+		printf("File Index \" %d \" does not exist\n", index);
+}
+
 void print_directory(){
 	int i;
 	printf("___File System Statistics___\n");
@@ -129,6 +130,7 @@ void print_directory(){
 			printf("     type:  %d\n", dentries[i].ftype);
 	}
 }
+
 
 void read_data_test(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t length){
 	uint8_t *addr;
@@ -228,7 +230,7 @@ int read_dentry_by_name( const uint8_t * fname, dentry_t * dentry){
 	int j=0;
 	int length= strlen((int8_t*) fname);
 	if( length <1 || length >MAX_NAMELENGTH) //test if valid name length
-		return -1;
+		return -2;
 
 	for(j=0; j<(info.dentries); j++){
 
@@ -318,7 +320,6 @@ int read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t length){
 		count++;
 	}
 	return ret;
-
 }
 /*
 

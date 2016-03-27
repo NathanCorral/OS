@@ -20,7 +20,7 @@ void setcoords(int x, int y);
 int32_t gety();
 int32_t getx();
 void updatecursor(int x);
-void update_screen(int x, int y, int cursor);
+void update_screen(int x, int y);
 void back_space();
 void scroll();
 void scroll_up();

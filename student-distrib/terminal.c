@@ -5,25 +5,64 @@
 #include "keyboard.h"
 
 
-int x, y, min_x, cursor, handle_inputs;
+int x, y, handle_inputs;
 
-unsigned char print_dir;
+unsigned char echo_input;
 
 //static spinlock_t lock = SPINLOCK_UNLOCKED;
 
+void terminal_init(){
+	// Wait for terminal to be opened
+	handle_inputs = 0;
+	echo_input = 0;
+}
 
-void termain_init(  ){
+
+int32_t terminal_open(){
+	int i;
+	char c;
 	clear();
 	x = 0;
 	y = 0;
-	cursor = 0;
-	handle_inputs = 0;
-	print_dir = 0;
-	update_screen(x, y, cursor);
-	// open keyboard file
-	// set starting directory
+	echo_input = 1;
+	update_screen(x, y);
+	// Output inputs taken before terminal was opened
+	// but after it was initialized
+	for(i=0; i<handle_inputs; i++){
+		c = getc();
+		if(c != -1)
+			putc(c);
+	}
+	return 0;
 }
 
+
+int32_t terminal_close(){
+	clear();
+	x = 0;
+	y = 0;
+	echo_input = 0;
+	update_screen(x,y);
+	return 0;
+}
+
+int32_t terminal_read(void* buf, int32_t nbytes){
+	return 0;
+}
+
+int32_t terminal_write(const void* buf, int32_t nbytes){
+	int i;
+	if(buf == NULL)
+		return -1;
+	for(i=0; i<nbytes; i++){
+		putc(((char *) buf)[i]);
+	}
+	return 0;
+}
+
+
+// Unused.  May be repurposed for terminal
+/*
 void terminal_shell(){
 	int i;
 	char c;
@@ -31,7 +70,7 @@ void terminal_shell(){
 	x = 0;
 	y = 0;
 	clear();
-	update_screen(x, y, cursor);
+	update_screen(x, y);
 	//printf("[root@no_directory]# ");
 	min_x = x;
 	while(1){
@@ -61,6 +100,7 @@ void terminal_shell(){
 		// May want to move terminal shell to new file
 	}
 }
+*/
 
 
 void terminal_ctr(char command){
@@ -79,22 +119,20 @@ void terminal_ctr(char command){
 		case DOWNARROW:
 			scroll();
 			break;
-
-		// Easy to add more commands for later
 	}
 }
 
 void terminal_input(){
 	// handle_inputs will be ignored during user programs and output
 	// once we finish
-	char c;
-	c = getc();
-	if(c != -1)
-		putc(c);
-	//spin_lock(lock);
-	handle_inputs++;
-	//spin_unlock(lock);
-	update_screen(x,y,0);
+	if(echo_input){
+		char c;
+		c = getc();
+		if(c != -1)
+			putc(c);
+	}
+	else
+		handle_inputs++;
 }
 
 void terminal_backspace(){
@@ -103,8 +141,7 @@ void terminal_backspace(){
 }
 
 void terminal_enter(){
-	//print_dir = 1;
-	// used for later
+	// possible use for later
 }
 
 void update_terminal(screen_x, screen_y){

@@ -1,11 +1,16 @@
 #ifndef TERMINAL_H
 #define TERMINAL_H
 
-void termain_init();
+#include "types.h"
 
-void terminal_shell();
+void terminal_init();
+
+int32_t terminal_open();
 
 void terminal_ctr( char command );
+int32_t terminal_close();
+int32_t terminal_read(void* buf, int32_t nbytes);
+int32_t terminal_write(const void* buf, int32_t nbytes);
 
 void terminal_input();
 

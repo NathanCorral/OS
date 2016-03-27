@@ -53,6 +53,8 @@ int dirwrite();
 
 // Test Functions for mp3.2
 void print_directory();
+void test_read_dentry_by_name(const uint8_t *fname);
+void test_read_dentry_by_index(uint32_t index);
 void read_data_test(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t length);
 
 int read_dentry_by_name( const uint8_t * fname, dentry_t * dentry);

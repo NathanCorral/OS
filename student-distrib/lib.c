@@ -55,11 +55,11 @@ void back_space(){
 	updatecursor(0);
 }
 
-void update_screen(int x, int y, int cursor){
+void update_screen(int x, int y){
 	// Save updating for only when we need it
 	screen_x = x;
 	screen_y = y;
-	updatecursor(cursor);
+	updatecursor(0);
 }
 
 int32_t gety(){

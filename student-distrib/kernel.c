@@ -192,7 +192,7 @@ pageinit();  //initialize and enable paging
 	/* Init the PIC */
 	i8259_init();
 	rtc_init(); //initialize rtc
-	keyboardopen();
+	keyboard_open();
 //enable interrupts
 	cli();
 	//enable_irq(8);
@@ -220,7 +220,7 @@ pageinit();  //initialize and enable paging
 	/* Execute the first program (`shell') ... */
 	//while(1);
 
-	termain_init();
+	terminal_init();
 
 	test_mp3_2();
 
