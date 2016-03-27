@@ -32,6 +32,7 @@ int32_t rtc_write(const void * ptr, int32_t nbytes);  // Writes new freq to rtc
 int32_t rtc_open(); // set to default freq of 2hz and set the rtc flag
 int32_t rtc_close(); // turns off rtc
 void rtc_init();
+void set_freq(char rate);
 
 #endif
 

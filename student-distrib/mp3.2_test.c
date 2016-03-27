@@ -9,7 +9,10 @@ void test_mp3_2(){
 
 
 void test_rtc(){
-
+	int i;
+	uint32_t test = 128;
+	for(i = 0; i < 1000000000; i++);
+	rtc_write(&test, 4);
 }
 
 void test_terminal(){

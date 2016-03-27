@@ -195,7 +195,6 @@ pageinit();  //initialize and enable paging
 	keyboardopen();
 //enable interrupts
 	cli();
-	//enable_irq(8);
 	
 	enable_irq(2);
 	sti();
@@ -221,9 +220,13 @@ pageinit();  //initialize and enable paging
 	//while(1);
 
 	terminal_init();
+<<<<<<< .mine
+	terminal_open();
+=======
 	terminal_open();
 	//test_mp3_2();
 
+>>>>>>> .r14435
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");
 }
