@@ -2,6 +2,11 @@
 #define TERMINAL_H
 
 #include "types.h"
+#include "lib.h"
+#include "spinlock.h"
+#include "keyboard.h"
+#include "x86_desc.h"
+
 
 void terminal_init();
 

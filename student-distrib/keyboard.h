@@ -1,6 +1,10 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
+#include "terminal.h"
+#include "spinlock.h"
+#include "i8259.h"
+
 #define LEFTCTRL 0x1D
 #define LEFTALT 0x38
 #define LEFTSHIFT 0x2A
@@ -26,12 +30,17 @@ extern char getc();
 
 extern void keyboardopen();
 //#include "types.h"
+extern void keyboard_init();
+extern int32_t keyboard_open();
+extern int32_t keyboard_close();
 
 
- extern int keyboardwrite(const unsigned char*buf, int nbytes);
- extern int keyboardread(char* buf, int nbytes);
+
+
+int32_t keyboard_read(void* buf, int32_t nbytes);
+
+int32_t keyboard_write(const void *buf, int32_t nbytes);
 //extern int32_t keyboardclose();
- extern void keyboardopen();
 extern void keyboard_handle();
 
 

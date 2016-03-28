@@ -37,6 +37,20 @@ clear(void)
     }
 }
 
+void
+clear_re(void)
+{
+    int32_t i;
+    scrolled = 0;
+    screen_x = 0;
+    screen_y = 0;
+
+    for(i=0; i<NUM_ROWS*NUM_COLS; i++) {
+        *(uint8_t *)(video_mem + (i << 1)) = ' ';
+       *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
+    }
+}
+
 void back_space(){
 	if(screen_x > 0){
 		screen_x--;

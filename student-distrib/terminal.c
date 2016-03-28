@@ -1,9 +1,6 @@
-#include "x86_desc.h"
-#include "terminal.h"
-#include "lib.h"
-#include "spinlock.h"
-#include "keyboard.h"
 
+
+#include "terminal.h"
 
 int x, y, handle_inputs;
 
@@ -19,20 +16,12 @@ void terminal_init(){
 
 
 int32_t terminal_open(){
-	int i;
-	char c;
-	clear();
 	x = 0;
 	y = 0;
+	clear();
 	echo_input = 1;
+	handle_inputs = 0;
 	update_screen(x, y);
-	// Output inputs taken before terminal was opened
-	// but after it was initialized
-	for(i=0; i<handle_inputs; i++){
-		c = getc();
-		if(c != -1)
-			putc(c);
-	}
 	return 0;
 }
 
@@ -61,7 +50,56 @@ int32_t terminal_write(const void* buf, int32_t nbytes){
 }
 
 
-// Unused.  May be repurposed for terminal
+void terminal_ctr(char command){
+	switch(command){
+		case 'l' :
+		case 'L' :
+			clear();
+			x = 0;
+			y = 0;
+			setcoords(x,y);
+			updatecursor(0);
+			break;
+
+		case UPARROW:
+			scroll_up();
+			break;
+
+		case DOWNARROW:
+			scroll();
+			break;
+	}
+}
+
+void terminal_input(){
+	// handle_inputs will be ignored during user programs and output
+	// once we finish
+	if(echo_input){
+		char c;
+		c = getc();
+		if(c != -1)
+			putc(c);
+	}
+	// Save for later
+	else
+		handle_inputs++;
+}
+
+void terminal_backspace(){
+	if(echo_input)
+		back_space();
+}
+
+void terminal_enter(){
+	// possible use for later
+}
+
+void update_terminal(screen_x, screen_y){
+	x = screen_x;
+	y = screen_y;
+}
+
+// Unused.  May be repurposed for shell
 /*
 void terminal_shell(){
 	int i;
@@ -101,53 +139,4 @@ void terminal_shell(){
 	}
 }
 */
-
-
-void terminal_ctr(char command){
-	switch(command){
-		case 'l' :
-		case 'L' :
-			clear();
-			x = 0;
-			y = 0;
-			setcoords(x,y);
-			updatecursor(0);
-			break;
-
-		case UPARROW:
-			scroll_up();
-			break;
-
-		case DOWNARROW:
-			scroll();
-			break;
-	}
-}
-
-void terminal_input(){
-	// handle_inputs will be ignored during user programs and output
-	// once we finish
-	if(echo_input){
-		char c;
-		c = getc();
-		if(c != -1)
-			putc(c);
-	}
-	else
-		handle_inputs++;
-}
-
-void terminal_backspace(){
-	//if(x > min_x)
-		back_space();
-}
-
-void terminal_enter(){
-	// possible use for later
-}
-
-void update_terminal(screen_x, screen_y){
-	x = screen_x;
-	y = screen_y;
-}
 

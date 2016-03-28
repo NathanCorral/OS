@@ -191,12 +191,15 @@ pageinit();  //initialize and enable paging
 // x=10/0;
 	/* Init the PIC */
 	i8259_init();
-	rtc_init(); //initialize rtc
-	keyboardopen();
+	//keyboardopen();
 //enable interrupts
+
+	// Initilize Drivers
 	cli();
-	
-	enable_irq(2);
+	rtc_init(); //initialize rtc
+	keyboard_init();
+	terminal_init();
+	//enable_irq(2);
 	sti();
 	
 	// for (x=0; x<128; x++)
@@ -219,14 +222,9 @@ pageinit();  //initialize and enable paging
 	/* Execute the first program (`shell') ... */
 	//while(1);
 
-	terminal_init();
-<<<<<<< .mine
-	terminal_open();
-=======
-	terminal_open();
-	//test_mp3_2();
 
->>>>>>> .r14435
+	test_mp3_2();
+
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");
 }
