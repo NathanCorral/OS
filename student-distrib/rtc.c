@@ -4,7 +4,7 @@ int interrupt = 0;  // Checks if an interrupt has occurred
 void rtc_handle(){
 	// NOTE::: delete cli/ sti after we make a common handler
 	cli();
-	printf("%d in rtc \n", count++);
+	//printf("%d in rtc \n", count++);
 	send_eoi(8);
 	//interrupt++;
 	outb(RTC_REG_C,RTC_PORT);	// select register C

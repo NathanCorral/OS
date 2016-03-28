@@ -111,3 +111,13 @@ _idt:
 	.endr
 
 idt_bottom:
+
+
+
+	.align 4
+page_directory:
+	.rept PAGE_DIR
+	.long 0
+	.endr
+
+page_directory_bottem:

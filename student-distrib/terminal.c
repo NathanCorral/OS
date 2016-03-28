@@ -36,7 +36,7 @@ int32_t terminal_close(){
 }
 
 int32_t terminal_read(void* buf, int32_t nbytes){
-	return 0;
+	return keyboard_read(buf, nbytes);
 }
 
 int32_t terminal_write(const void* buf, int32_t nbytes){
@@ -46,7 +46,7 @@ int32_t terminal_write(const void* buf, int32_t nbytes){
 	for(i=0; i<nbytes; i++){
 		putc(((char *) buf)[i]);
 	}
-	return 0;
+	return nbytes;
 }
 
 
@@ -59,6 +59,7 @@ void terminal_ctr(char command){
 			y = 0;
 			setcoords(x,y);
 			updatecursor(0);
+			keyboard_open();
 			break;
 
 		case UPARROW:
@@ -71,14 +72,11 @@ void terminal_ctr(char command){
 	}
 }
 
-void terminal_input(){
+void terminal_input(char key_input){
 	// handle_inputs will be ignored during user programs and output
 	// once we finish
 	if(echo_input){
-		char c;
-		c = getc();
-		if(c != -1)
-			putc(c);
+		putc(key_input);
 	}
 	// Save for later
 	else

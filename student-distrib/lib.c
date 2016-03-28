@@ -109,11 +109,9 @@ void scroll(){
 	int x, y;
 
 
-	offset += NUM_COLS;
-
-
 	if(scrolled < SCROLL_MAX){
-
+		
+		offset += NUM_COLS;
 		scrolled++;
 	
 		 outb(0x0D, 0x3D4); 

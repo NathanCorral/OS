@@ -65,7 +65,7 @@ enable_irq(uint32_t irq_num)
 {
 	char mask;
 	uint16_t port;
-	#ifdef DEBUG_PIC
+#ifdef DEBUG_PIC
 	int i;
 #endif
 //if interrupt on master
@@ -89,7 +89,7 @@ enable_irq(uint32_t irq_num)
 	}
 	
 #ifdef DEBUG_PIC
-		for(i=0; i<10000; i++); // wait a sec before we check
+	for(i=0; i<10000; i++); // wait a sec before we check
 		i = inb(port);
 		if(i & (irq_num << 1) != 0)
 			printf("Failed to enable irq \n");

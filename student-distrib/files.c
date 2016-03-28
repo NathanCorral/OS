@@ -321,7 +321,7 @@ int read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t length){
 	}
 	return ret;
 }
-/*
+
 
 //reads file
 //input is file name, offset into file, buffer to copy to, length
@@ -342,6 +342,7 @@ return -1;
 return read_data(mydentry.inode, offset, buf, length); //read
 }
 
+/*
 //reads a directory, like ls
 //input is buffer to copy to
 //output is 0 if end of directory length of name otherwise
@@ -357,12 +358,13 @@ reads++;
 return strlen((int8_t *) buf);
 
 }
+*/
 
 //reads file, acts like fsread
 int fileread(uint8_t * buf, uint32_t length, const int8_t * fname, uint32_t offset){
 	return fsread(fname, offset, buf, length); //same as fs read
 }
-
+/*
 
 //puts data into memory from data blocks
 //input is file name, address in memory

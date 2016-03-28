@@ -199,7 +199,7 @@ pageinit();  //initialize and enable paging
 	rtc_init(); //initialize rtc
 	keyboard_init();
 	terminal_init();
-	//enable_irq(2);
+	enable_irq(2);
 	sti();
 	
 	// for (x=0; x<128; x++)

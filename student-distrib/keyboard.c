@@ -92,7 +92,7 @@ int32_t keyboard_read(void* buf, int32_t nbytes){
 
 int32_t keyboard_write(const void *buf, int32_t nbytes){
 	// May want to call terminal write
-	return 0;
+	return terminal_write(buf, nbytes);
 }
 
 
@@ -153,20 +153,20 @@ void keyboard_handle(){
 
 			stdin[buf_incidx(end)] = '\n';
 			//terminal_enter();
-			terminal_input();
+			terminal_input('\n');
+			start = end;
 			break;
 
 		// Now that we have handled all special inputs
 		default :
-			if(buf_full(start, end))
-				break; // Do nothing for now.  May want to report error
 
 			if(key >= ALLRELEASE)
 				break;  // Release key
 
 			// Check if key is in array
 			if(key >= 64)
-				key_input = key;
+				break;
+				//key_input = key;
 			// The key is valid so we find the input
 			else if(shiftset || capset)
 				key_input = keyshiftchar[key];
@@ -180,20 +180,12 @@ void keyboard_handle(){
 			
 
 			else{
+				if(buf_full(start, end) || key_input == '\0')
+					break;
+				
 				stdin[buf_incidx(end)] = key_input;
-				//stdin[127]= '\n';
-
-				// if( buf_incidx(end)>=127){
-				// 	if( key==ENTER ||(ctrlset==1 && key==LKEY)){
-				// 		// while(buf_incidx(end) != buf_incidx(start))
-				// 		// 	stdin[buf_incidx(end)]= '\0';
-				// 		;
-				// 	}
-				// 	else{
-				// 		break;
-				// 	}
-				// }
-				terminal_input();
+		
+				terminal_input(key_input);
 			}
 
 	}

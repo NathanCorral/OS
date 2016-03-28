@@ -17,10 +17,8 @@ pushl %ebp
 pushl %esi
 pushl %edi
 
-cld
+
 call keyboard_handle
-
-
 
 popl %edi
 popl %esi

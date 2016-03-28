@@ -17,7 +17,7 @@ int32_t terminal_close();
 int32_t terminal_read(void* buf, int32_t nbytes);
 int32_t terminal_write(const void* buf, int32_t nbytes);
 
-void terminal_input();
+void terminal_input(char key_input);
 
 void terminal_backspace();
 

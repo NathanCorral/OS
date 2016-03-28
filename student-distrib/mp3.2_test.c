@@ -4,16 +4,18 @@ void test_mp3_2(){
 	//test_rtc();
 	//while(1);
 	//test_io();
-	//test_filesystem();
+	test_filesystem();
 }
 
 
 void test_rtc(){
 
 	int i;
+	rtc_open();
 	uint32_t test = 128;
 	for(i = 0; i < 1000000000; i++);
 	rtc_write(&test, 4);
+	rtc_close();
 }
 
 void test_io(){
@@ -76,13 +78,21 @@ void test_filesystem(){
 	uint32_t inode = 22;
 	uint32_t offset = 5600;
 	uint32_t length = 64;
-	unsigned char * string = "counter";
+	 char * string = "counter";
 	// buf array should be same size or greater than length
 	uint8_t buf[64];
-
+	int i;
 	
 	print_directory();
-	test_read_dentry_by_name(string);
+	test_read_dentry_by_name((unsigned char *)string);
 	test_read_dentry_by_index(5);
 	read_data_test(inode,  offset, buf, length);
+	
+	fsread(string, offset, buf, length);
+	printf("\n Wrapper data");
+	for(i=0; i<length; i++){
+		if(i%16 == 0)
+			printf("\n");
+		printf("0x%x ", buf[i]);
+	}
 }
