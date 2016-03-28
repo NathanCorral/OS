@@ -1,8 +1,6 @@
 
-#include "terminal.h"
+
 #include "keyboard.h"
-#include "spinlock.h"
-#include "i8259.h"
 
 #define RELEASE(key) (key |0x80)
 
@@ -17,6 +15,7 @@
 #define buf_empty(start, end) ((start) == (end))
 #define buf_full(start, end) ((((end)+1)%BUF_SIZE) == (start))
 #define buf_incidx(idx) ((idx) = ((idx)+1) % BUF_SIZE)
+#define buf_decidx(idx) ((idx) = ((idx)-1) % BUF_SIZE)
 
 char stdin[BUF_SIZE];
 int start, end;
@@ -46,6 +45,12 @@ static uint8_t capset=0;
 static uint8_t altset = 0;
 
 
+void keyboard_init(){
+	start = 0;
+	end = 0;
+	enable_irq(1);
+}
+
 // Get next char from input
 char getc(){
 	if(buf_empty(start,end))
@@ -56,63 +61,44 @@ char getc(){
 	return c;
 }
 
-void keyboardopen(){
-	end = 0;
-	start = 0;
-	enable_irq(1);
+int32_t keyboard_open(){
+	start = end;
+	return 0;
 }
 
-int keyboardread(char* buf, int nbytes){
+int32_t keyboard_close(){
+	return 0;
+}
+
+int32_t keyboard_read(void* buf, int32_t nbytes){
 	int bytesread=0;
 	char c;
 
-	if(buf == NULL)
-		return -1;		// -EINVAL
-	// Wait for input
-	while(buf_empty(start,end));
+	if(buf == NULL || nbytes < 0)
+		return -1;	
 
-	// Keep writing until we hit a new line
-	c = stdin[buf_incidx(start)];
-	while( c != '\n'){
-		buf[bytesread++] = c;
+	// Keep writing until we fill up buffer or hit a new line
+	while( bytesread < nbytes ){
 		// Wait for new input
 		while(buf_empty(start,end));
 
 		c = stdin[buf_incidx(start)];
+		((char *) buf)[bytesread++] = c;
+		if(c == '\n')
+			break;		
 	}
-
-	buf[bytesread++] = c;
-
 	return bytesread;
 }
 
-int keyboardwrite(const unsigned char*buf, int nbytes){
-	int successes=0;
-	int count = nbytes;
-	long unsigned flags;
-
-
-	if(buf == NULL)
-		return -1;		// -EINVAL
-
-	spin_lock_irqsave(lock, flags);
-
-	while(!buf_full(start, end) && (count > 0)){
-		stdin[buf_incidx(end)] = buf[successes++];
-		count--;
-	}
-
-	spin_unlock_irqrestore(lock, flags);
-
-return successes;
+int32_t keyboard_write(const void *buf, int32_t nbytes){
+	// May want to call terminal write
+	return 0;
 }
 
 
 void keyboard_handle(){
 
 	cli();
-
-
 
 	uint8_t key;
 	uint8_t key_input;
@@ -154,7 +140,7 @@ void keyboard_handle(){
 
 		case BACKSPACE :
 			if(!buf_empty(start,end)){
-				end--;
+				buf_decidx(end);
 			}
 			terminal_backspace();
 			break;
@@ -163,10 +149,10 @@ void keyboard_handle(){
 			// Throw away last character if stdin is full and
 			// replace it with new line
 			if(buf_full(start,end))
-				buf_incidx(start);
+				buf_decidx(end);
 
 			stdin[buf_incidx(end)] = '\n';
-			terminal_enter();
+			//terminal_enter();
 			terminal_input();
 			break;
 
@@ -195,7 +181,7 @@ void keyboard_handle(){
 
 			else{
 				stdin[buf_incidx(end)] = key_input;
-				stdin[127]= '\n';
+				//stdin[127]= '\n';
 
 				// if( buf_incidx(end)>=127){
 				// 	if( key==ENTER ||(ctrlset==1 && key==LKEY)){
