@@ -5,6 +5,8 @@ void test_mp3_2(){
 	//while(1);
 	//test_io();
 	test_filesystem();
+	//test_keyboard();
+	//test_terminal();
 }
 
 
@@ -41,6 +43,7 @@ void test_terminal(){
 	terminal_open();
 	terminal_write(string, strlen(string));
 	for(i = 0; i<100000000; i++);
+
 	terminal_close();
 }
 
@@ -57,7 +60,7 @@ void test_keyboard(){
 	printf("We will now write to the screen what was on the buffer\n");
 	// Press 'Q' to exit
 	while(flag){
-		amount = keyboard_read(buf,length);
+		amount = terminal_read(buf,length);
 		for(i=0; i<amount; i++){
 			if(buf[i] == 'Q'){
 				flag = 0;
@@ -76,7 +79,7 @@ void test_filesystem(){
 	// Inode number of program named "counter"
 	// Modify these values to test other memory locations/files
 	uint32_t inode = 22;
-	uint32_t offset = 5600;
+	uint32_t offset = 0;
 	uint32_t length = 64;
 	 char * string = "counter";
 	// buf array should be same size or greater than length
@@ -88,11 +91,16 @@ void test_filesystem(){
 	test_read_dentry_by_index(5);
 	read_data_test(inode,  offset, buf, length);
 	
-	fsread(string, offset, buf, length);
+	
 	printf("\n Wrapper data");
+	//while(fsread(string, offset, buf, length) !=0){
+	fsread(string, offset, buf, length);
 	for(i=0; i<length; i++){
 		if(i%16 == 0)
 			printf("\n");
 		printf("0x%x ", buf[i]);
+		offset += length;
+	//}
 	}
 }
+

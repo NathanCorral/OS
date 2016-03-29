@@ -22,6 +22,7 @@ int32_t terminal_open(){
 	echo_input = 1;
 	handle_inputs = 0;
 	update_screen(x, y);
+	keyboard_open();
 	return 0;
 }
 
@@ -58,7 +59,7 @@ void terminal_ctr(char command){
 			x = 0;
 			y = 0;
 			setcoords(x,y);
-			updatecursor(0);
+			update_screen(x,y);
 			keyboard_open();
 			break;
 
