@@ -364,7 +364,7 @@ return strlen((int8_t *) buf);
 int fileread(uint8_t * buf, uint32_t length, const int8_t * fname, uint32_t offset){
 	return fsread(fname, offset, buf, length); //same as fs read
 }
-/*
+
 
 //puts data into memory from data blocks
 //input is file name, address in memory
@@ -386,6 +386,6 @@ int fstomem(const int8_t *fname, uint32_t address){
 	return 0;
 
 }
-*/
+
 
 
