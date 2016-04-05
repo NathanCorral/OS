@@ -63,7 +63,8 @@ int i;
 void
 enable_irq(uint32_t irq_num)
 {
-	char mask;
+
+	unsigned char mask;
 	uint16_t port;
 #ifdef DEBUG_PIC
 	int i;

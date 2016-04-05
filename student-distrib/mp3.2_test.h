@@ -6,6 +6,7 @@
 #include "keyboard.h"
 #include "rtc.h"
 #include "lib.h"
+#include "paging.h"
 
 void test_mp3_2();
 void test_rtc();

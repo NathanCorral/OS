@@ -7,8 +7,6 @@ typedef struct spinlock_type {
 	unsigned char lock;
 } spinlock_t;
 
-
-
 #define SPINLOCK_UNLOCKED (spinlock_t) { 0 }
 
 #define SPINOCK_LOCKED (spinlock_t) { 1 }
@@ -41,7 +39,8 @@ do {									\
 
 #define spin_lock_irqsave(lock, flags)	\
 do {									\
-	asm volatile( "pushfl \n\t"		\
+	cli();								\
+	asm volatile( "pushfl \n\t"			\
 		"popl %0  \n\t"					\
 		"movb $1, %%al \n\t"			\
 		"1: \n\t"						\
@@ -59,6 +58,7 @@ do {									\
 do {										\
 	spin_unlock(lock);						\
 	restore_flags(flags);					\
+	sti();									\
 } while(0)
 
 

@@ -1,12 +1,13 @@
 #include "mp3.2_test.h"
 
 void test_mp3_2(){
+	paging_test();
 	//test_rtc();
-	//while(1);
 	//test_io();
-	test_filesystem();
+	//test_filesystem();
 	//test_keyboard();
 	//test_terminal();
+	while(1);
 }
 
 

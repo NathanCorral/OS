@@ -8,7 +8,7 @@
 
 #define buf_used(start,end) ((start) <= (end) ? \
 				  ((end) - (start))  \
-				: (buf_size + (end) - (start)))
+				: (BUF_SIZE + (end) - (start)))
 
 #define buf_room(start,end) (BUF_SIZE - buf_used(start,end) - 1)
 #define buf_empty(start, end) ((start) == (end))

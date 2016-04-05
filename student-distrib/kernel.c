@@ -168,6 +168,7 @@ entry (unsigned long magic, unsigned long addr)
 		ltr(KERNEL_TSS);
 	}
 
+
 interruptinit(); //initialize interrupts
 
 
@@ -176,8 +177,7 @@ interruptinit(); //initialize interrupts
 
 	
 
-pageinit();  //initialize and enable paging
-//pageenable();
+	pageinit();
 
 
 
