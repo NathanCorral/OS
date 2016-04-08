@@ -72,11 +72,19 @@ void stackfault(){
 void genprotection(){
 	cli();
 	printf("gerneral protection fault \n");
+	int var=0;
+
+	asm volatile("movl %%cr2, %0  ;":"=r"(var));
+	printf(" %x \n", var);
 	while(1);
 }
 void pagefault(){
 	cli();
 	printf("page fault \n");
+	int var=0;
+
+	asm volatile("movl %%cr2, %0  ;":"=r"(var));
+	printf(" %x \n", var);
 	while(1);
 }
 void reserved(){

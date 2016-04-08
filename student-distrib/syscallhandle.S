@@ -8,7 +8,7 @@
  .global gotouser
  
 syscallhandle:
-	pushad
+	pushal
 
 	pushl %edx #arg3
 	pushl %ecx #arg2
@@ -29,27 +29,28 @@ invalid:
 end:
 	addl $12, %esp #pop args
 
-	popad
+	popal
 	iret
 
 
 sysjump:
-	.long $0
-	.long halt 
-	.long execute
- 	.long read
- 	.long write
- 	.long open
- 	.long close
- 	.long getargs
- 	.long vidmap
- 	.long set_handler
- 	.long sigreturn 
+	.long emptyfunc
+	// .long halt 
+	// .long execute
+ // 	.long read
+ // 	.long write
+ // 	.long open
+ // 	.long close
+ // 	.long getargs
+ // 	.long vidmap
+ // 	.long set_handler
+ // 	.long sigreturn 
 
 
 gotouser:
 	cli
-
+	// pushl %ebp
+ //    movl %esp, %ebp
 	movl 4(%esp), %ebx # put eip into ebx
 
 	//segment selectors
@@ -73,7 +74,7 @@ gotouser:
 	pushl %ebx
 
 	iret
-
+ //addl $8, %esp #pop args
 
 
 

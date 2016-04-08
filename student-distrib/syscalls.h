@@ -1,14 +1,19 @@
-// System_calls.h
-
-#ifndef SYSCALLS.H
-#define SYSCALLS.H
+#ifndef SYSCALLS_H
+#define SYSCALLS_H
 
 #include "files.h"
 #include "x86_desc.h"
+#include "paging.h"
+#include "types.h"
+#include "terminal.h"
+#include "rtc.h"
+#include "syscallhandle.h"
 
 
 #define ENTRYPT 24
 #define PROGADDR 0x08048000
+#define PCBALIGN 0xFFFFE000
+
 
 typedef struct fdescriptor_t {
 	uint32_t *jumptable;
@@ -18,8 +23,9 @@ typedef struct fdescriptor_t {
 
 } fdescriptor_t;
 // Define structure for pcb
-typedef struc pcb_t{
+typedef struct pcb_t{
 
+	uint8_t names[8][32];
 	fdescriptor_t fdescs[8];
 	uint32_t kernel_sp; // Points to the top of the kernel stack
 	uint32_t kernel_bp; // Points to the base of the kernel stack

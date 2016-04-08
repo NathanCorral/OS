@@ -7,6 +7,7 @@
 #include "rtc.h"
 #include "lib.h"
 #include "paging.h"
+#include "syscalls.h"
 
 void test_mp3_2();
 void test_rtc();
@@ -14,6 +15,7 @@ void test_io();
 void test_terminal();
 void test_keyboard();
 void test_filesystem();
+void test_execute();
 
 #endif
 

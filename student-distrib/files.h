@@ -7,6 +7,9 @@
 #define MAX_NAMELENGTH 32
 #define NEXT_ENTRY 64
 #define NEXT_BLOCK 0x1000
+#define RTCTYPE 0
+#define DIRTYPE 1
+#define FILETYPE 2
 
 
 
@@ -43,13 +46,13 @@ int divide_floor(uint32_t num, uint32_t den);
 
 int fsopen(uint32_t start_addr, uint32_t end_addr);
 int fsclose();
-int fswrite();
-int filewrite();
+int fswrite(void);
+int filewrite(void);
 int diropen();
 int dirclose();
 int fileopen();
 int fileclose();
-int dirwrite();
+int dirwrite(void);
 
 // Test Functions for mp3.2
 void print_directory();
@@ -63,9 +66,9 @@ int read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t length);
 
 int fsread(const int8_t *fname, uint32_t offset, uint8_t * buf, uint32_t length);
 
-//int dirread(uint8_t * buf);
+int dirread(uint8_t * buf);
 int fileread(uint8_t * buf, uint32_t length, const int8_t * fname, uint32_t offset);
 
-//int fstomem(const int8_t *fname, uint32_t address);
+int fstomem(const int8_t *fname, uint32_t address);
 
 #endif

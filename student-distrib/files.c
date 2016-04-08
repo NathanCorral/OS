@@ -193,11 +193,11 @@ int fsclose(){
 	return 0;
 }
 //stub
-int fswrite(){
+int fswrite(void){
 	return -1;
 }
 //stub
-int filewrite(){
+int filewrite(void){
 	return -1;
 }
 //stub
@@ -217,7 +217,7 @@ int fileclose(){
 	return 0;
 }
 //stub
-int dirwrite(){
+int dirwrite(void){
 	return -1;
 }
 
@@ -342,7 +342,7 @@ return -1;
 return read_data(mydentry.inode, offset, buf, length); //read
 }
 
-/*
+
 //reads a directory, like ls
 //input is buffer to copy to
 //output is 0 if end of directory length of name otherwise
@@ -353,12 +353,12 @@ if(reads>= info.dentries){ //file system has been read all the way through, so r
 	return 0;
 }
 //put name of file into buffer
-strcpy((int8_t *)buf, (int8_t *)dentries[reads].fname, strlen(dentries[reads].fname));
+strcpy((int8_t *)buf, (int8_t *)dentries[reads].fname);
 reads++;
 return strlen((int8_t *) buf);
 
 }
-*/
+
 
 //reads file, acts like fsread
 int fileread(uint8_t * buf, uint32_t length, const int8_t * fname, uint32_t offset){

@@ -1,12 +1,13 @@
 #include "mp3.2_test.h"
 
 void test_mp3_2(){
-	paging_test();
+	//paging_test();
 	//test_rtc();
 	//test_io();
 	//test_filesystem();
 	//test_keyboard();
 	//test_terminal();
+	test_execute();
 	while(1);
 }
 
@@ -103,5 +104,10 @@ void test_filesystem(){
 		offset += length;
 	//}
 	}
+}
+
+void test_execute(){
+	execute("shell");
+
 }
 

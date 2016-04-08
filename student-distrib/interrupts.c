@@ -9,6 +9,8 @@
 #include "keyboardirq.h"
 #include "rtc.h"
 #include "rtcirq.h"
+#include "syscalls.h"
+#include "syscallhandle.h"
 
 void interruptinit(){
 	int i;
@@ -83,5 +85,6 @@ for(i=0x20; i<0x2F; i++){
 	// Link interupt handlers.
 	SET_IDT_ENTRY(idt[33],keyboard_wrapper);
 	SET_IDT_ENTRY(idt[40],rtc_wrapper);
+	SET_IDT_ENTRY(idt[0x80], syscallhandle);
 
 	}

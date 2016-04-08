@@ -142,10 +142,15 @@ uint32_t allocate_big_page(uint32_t flags, uint32_t vir_addr){
 		return -1;
 
 	uint32_t phys_addr;
+	uint32_t p2;
 	phys_addr = get_any_page();
 	if(phys_addr < 0)
 		return -1;
 	map_epage(flags, phys_addr, vir_addr);
+	p2 = get_any_page();
+	if(p2 < 0)
+		return -1;
+	map_epage(flags, p2, 0x0700000);
 	
 	return phys_addr;
 }
@@ -287,7 +292,7 @@ void paging_test(){
 	map_epage(flags, test, vir_addr);
 	printf("Memory read test from phys addr 0x%#x\n", (uint32_t) test);
 	for(i=0; i<15; i++){
-		printf("%d ", ((int *) vir_addr)[i]);
+		printf("0x%#x ", ((int *) vir_addr)[i]);
 	}	
 }
 
