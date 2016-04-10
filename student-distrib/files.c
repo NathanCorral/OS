@@ -346,7 +346,7 @@ return read_data(mydentry.inode, offset, buf, length); //read
 //reads a directory, like ls
 //input is buffer to copy to
 //output is 0 if end of directory length of name otherwise
-int dirread(uint8_t * buf){
+int dirread(const int8_t *fname, uint32_t offset, uint8_t * buf, uint32_t length){
 
 if(reads>= info.dentries){ //file system has been read all the way through, so reset
 	reads=0;

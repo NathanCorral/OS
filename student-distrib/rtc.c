@@ -34,7 +34,7 @@ int32_t rtc_open(){
 int32_t rtc_close(int32_t fd){
 	return 0; 
 }
-int32_t rtc_read(void * buf, int32_t nbytes){
+int32_t rtc_read(const int8_t *fname, uint32_t offset, uint8_t * buf, uint32_t nbytes){
 	while(interrupt == 0){ // Do nothing until the interrupt handler clears the flag
 		/* Wait for an interrupt to occur */
 	}
@@ -42,7 +42,7 @@ int32_t rtc_read(void * buf, int32_t nbytes){
 	return 0;
 }
 
-int32_t rtc_write(const void * ptr, int32_t nbytes){
+int32_t rtc_write(int32_t fd, const void* ptr, int32_t nbytes){
 	int32_t freq;
 	char rate;
 	// Checks if the ptr is null

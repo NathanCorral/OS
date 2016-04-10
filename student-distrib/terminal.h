@@ -14,8 +14,8 @@ int32_t terminal_open();
 
 void terminal_ctr( char command );
 int32_t terminal_close();
-int32_t terminal_read(void* buf, int32_t nbytes);
-int32_t terminal_write(const void* buf, int32_t nbytes);
+int32_t terminal_read(const int8_t *fname, uint32_t offset, uint8_t * buf, uint32_t nbytes);
+int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes);
 
 void terminal_input(char key_input);
 

@@ -176,7 +176,7 @@ interruptinit(); //initialize interrupts
 	clear(); //clear again just to be sure
 
 	
-
+//fsopen( module->mod_start, module->mod_end );
 	pageinit();
 
 
@@ -199,6 +199,8 @@ interruptinit(); //initialize interrupts
 	rtc_init(); //initialize rtc
 	keyboard_init();
 	terminal_init();
+	keyboard_open();
+	terminal_open();
 	enable_irq(2);
 	sti();
 	

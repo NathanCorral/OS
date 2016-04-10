@@ -25,6 +25,7 @@
 #define PT_OFF 0x003FF000
 #define ADDR_ENTRY 0xFFFFF000
 #define FLAG_ENTRY 0x00000FFF
+#define tablesize 1024
 
 #include "lib.h"
 #include "x86_desc.h"
@@ -32,9 +33,16 @@
 #include "errors.h"
 #include "queue.h"
 
+
+typedef struct dir_t {
+	int pagedir[tablesize];
+
+} dir_t;
+extern uint32_t getaddr(uint8_t process);
 extern void pageenable();
 extern void pageinit();
 extern void paging_test();
+extern int32_t newtask( uint8_t process);
 uint32_t lin_to_phys(uint32_t addr);
 
 uint32_t allocate_big_page(uint32_t flags, uint32_t vir_addr);

@@ -6,6 +6,9 @@
  
  .global syscallhandle
  .global gotouser
+
+ returnval:
+ .long 0
  
 syscallhandle:
 	pushal
@@ -27,20 +30,23 @@ invalid:
 	movl $-1, %eax
 
 end:
+
 	addl $12, %esp #pop args
+	movl %eax, returnval
 
 	popal
+	movl returnval, %eax
 	iret
 
 
 sysjump:
 	.long emptyfunc
-	// .long halt 
-	// .long execute
- // 	.long read
- // 	.long write
- // 	.long open
- // 	.long close
+	 .long halt 
+	 .long execute
+  	.long read
+  	.long write
+  	.long open
+  	.long close
  // 	.long getargs
  // 	.long vidmap
  // 	.long set_handler

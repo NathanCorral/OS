@@ -27,8 +27,8 @@
 #define FREQ_1024 0x06
 
 void rtc_handle();
-int32_t rtc_read(void * buf, int32_t nbytes); // Blocks until interrupt
-int32_t rtc_write(const void * ptr, int32_t nbytes);  // Writes new freq to rtc
+int32_t rtc_read(const int8_t *fname, uint32_t offset, uint8_t * buf, uint32_t nbytes); // Blocks until interrupt
+int32_t rtc_write(int32_t fd, const void* ptr, int32_t nbytes);  // Writes new freq to rtc int32_t fd, const void* ptr, int32_t nbytes
 int32_t rtc_open(); // set to default freq of 2hz and set the rtc flag
 int32_t rtc_close(); // turns off rtc
 void rtc_init();

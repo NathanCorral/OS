@@ -14,9 +14,15 @@
 #define PROGADDR 0x08048000
 #define PCBALIGN 0xFFFFE000
 
+typedef struct fops {
+	int32_t (*open)(const uint8_t* filename);
+	int32_t (*close)(int32_t fd);
+	int32_t (*read)(int8_t * filename, uint32_t offset, void* buf, int32_t nbytes );
+	int32_t (*write)(int32_t fd, const void* buf, int32_t nbytes);
+} fops_t;
 
 typedef struct fdescriptor_t {
-	uint32_t *jumptable;
+	fops_t *jumptable;
 	int32_t inode;
 	int32_t position; //where in file
 	int32_t inuse; //0 if not in use , 1 if in use
@@ -29,14 +35,23 @@ typedef struct pcb_t{
 	fdescriptor_t fdescs[8];
 	uint32_t kernel_sp; // Points to the top of the kernel stack
 	uint32_t kernel_bp; // Points to the base of the kernel stack
+	uint32_t kernel_ss;
+	uint32_t espsave;
 	uint32_t user_sp;  // Points to the top of the user stack
 	uint32_t user_bp; // Points to the base of the user stack
-	uint8_t process; // Indicates number of process currently being executed
-	uint8_t parent_process; 	
+	int8_t process; // Indicates number of process currently being executed
+	int8_t parent_process; 	
 	int8_t argsave[1024];
+	int32_t savestatus;
 }pcb_t;
 
 // function to execute user code
-int32_t execute(const int8_t * fname);
-int32_t halt(int8_t done);
+int32_t execute(const int8_t * cmd);
+int32_t halt(int8_t status);
+void stdinopen (int32_t fd);
+void stdoutopen (int32_t fd);
+int32_t open(const uint8_t * filename);
+int32_t close( int32_t fd);
+int32_t read(int32_t fd, void *buf, int32_t nbytes);
+int32_t write(int32_t fd, void *buf, int32_t nbytes);
 #endif

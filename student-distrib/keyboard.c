@@ -83,15 +83,17 @@ int32_t keyboard_read(void* buf, int32_t nbytes){
 
 		c = stdin[buf_incidx(start)];
 		((char *) buf)[bytesread++] = c;
-		if(c == '\n')
-			break;		
+		if(c == '\n'){
+
+start= end;
+			break;	}	
 	}
 	return bytesread;
 }
 
 int32_t keyboard_write(const void *buf, int32_t nbytes){
 	// May want to call terminal write
-	return terminal_write(buf, nbytes);
+	return terminal_write(8, buf, nbytes);
 }
 
 
@@ -138,9 +140,12 @@ void keyboard_handle(){
 			break;
 
 		case BACKSPACE :
+		//stdin[buf_incidx(end)]= '\0';
 			if(!buf_empty(start,end)){
+
 				buf_decidx(end);
 			}
+
 			terminal_backspace();
 			break;
 
@@ -153,7 +158,7 @@ void keyboard_handle(){
 			stdin[buf_incidx(end)] = '\n';
 			//terminal_enter();
 			terminal_input('\n');
-			start = end;
+			//start = end;
 			break;
 
 		// Now that we have handled all special inputs
