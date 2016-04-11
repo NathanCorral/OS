@@ -1,51 +1,25 @@
 #include "syscalls.h"
 
+
+#define maxfd 7
+#define MB8 0x800000
+#define EMPTYMASK 0x7F
+#define KB8 0x2000
+#define MASK 0x80
 uint32_t kstackbottom;
 uint8_t running= 0;
 uint8_t current=0;
 uint32_t pdaddr;
 
-
+//this does nothing
 int32_t emptyfunc(){
 	return 0;
 }
 
-// uint32_t stdintable[4]={
-// 			(uint32_t) (emptyfunc),
-// 			 (uint32_t) (terminal_read),
-// 			 (uint32_t) (emptyfunc),
-// 			(uint32_t) (emptyfunc)};
-
-
-// uint32_t stdouttable[4]={
-// 			(uint32_t) (emptyfunc),
-// 			 (uint32_t) (emptyfunc),
-// 			(uint32_t) (terminal_write),
-// 			 (uint32_t) (emptyfunc)};
 
 
 
-// uint32_t rtctable[4]={
-// 			(uint32_t) (rtc_open),
-// 			 (uint32_t) (rtc_read),
-// 			(uint32_t) (rtc_write),
-// 			 (uint32_t) (rtc_close)};
-
-// uint32_t filetable[4]={
-// 			(uint32_t) (fileopen),
-// 			(uint32_t) (fileread),
-// 		(uint32_t) (filewrite),
-// 			(uint32_t) (fileclose)};
-
-// uint32_t dirtable[4]={
-// 			 (uint32_t) (diropen),
-// 			 (uint32_t) (dirread),
-// 			(uint32_t) (dirwrite),
-// 			 (uint32_t) (dirclose)};
-
-
-
-
+//all the fops tables
 fops_t stdouttable = {
 	.open = NULL,
 	.close = NULL,
@@ -107,7 +81,7 @@ int openprocess;
 	if(cmd == NULL){
 		return -1;
 	}
-
+//get name of file
 	for (i=0; cmd[i] != '\0'; i++){
 		if (cmd[i]== ' ' && spaceflag==0){
 			namelength=i;
@@ -138,8 +112,8 @@ int openprocess;
 
 
 //look for open spot in process
-	uint8_t bitmask=0x80;
-	for (i=0; i<8; i++){
+	uint8_t bitmask=MASK;
+	for (i=0; i<maxfd+1; i++){
 		if ((running & bitmask) ==0){
 			openprocess=i;
 			running |= bitmask;
@@ -153,43 +127,30 @@ int openprocess;
 
 
 
-
+//read to get entrypoint
 	if(fsread(fname, ENTRYPT, (uint8_t *)buf, 4)==-1)
 		return -1;
 
 	for(i=0; i<4; i++){
-		buf[i]= buf[i] & 0xFF;
-		//printf("%x", buf[i]);
-		//printf("\n");
-		entrypoint |= (buf[i] << i*8);
-		//printf("entrypoint: %x\n", entrypoint);
+		//buf[i]= buf[i] & 0xFF;
+		
+		entrypoint |= (buf[i] << i*(maxfd+1)); //set entrypoint
+		
 	}
 
-
-	//printf("ready for paging\n");
+//set up paging
+	
 	if( newtask(openprocess)==-1)
 		return -1;
 
-	//printf("openprocess: %d\n", openprocess);
-//set up page directory for task
-//allocate hands back pcb or process number
-
-
-
-// 	uint32_t flags=0;
-// 	uint32_t phys= 0x800000+0x400000;
-// 	uint32_t virt= 0x8000000;
-// 	flags |= (SET_P) | SET_R | SET_U |SET_S;
-
-// allocate_big_page( flags, virt);
-
-// 	printf("post allcocate\n");
 	fstomem(fname, PROGADDR);
-//printf("post copy\n");
-	pcb_t * pcb= (pcb_t*)(0x800000-0x2000*(openprocess+1)); //openprocess- need this
 
+	pcb_t * pcb= (pcb_t*)(MB8-KB8*(openprocess+1)); //get pcb
+
+
+//save ebp, esp, ss
 	uint32_t esp;
-	//asm volatile("movl %%esp, %0":"=g"(esp));
+	
 	pcb->kernel_sp=tss.esp0;
 
 	uint32_t ebp;
@@ -198,26 +159,29 @@ int openprocess;
 	pcb->kernel_ss=tss.ss0;
 
 
-//check if 1st open process
-	if( running ==0x80){
+//check if 0th open process
+	if( running ==MASK){
 		pcb->parent_process= -1;
 	}
 	else{
 		pcb->parent_process= ((pcb_t *)((uint32_t)&esp & PCBALIGN))->process;
 	}
 
-	pcb->process= openprocess; //openprocess- need this
+	pcb->process= openprocess; 
 
-
+//save args
 	strcpy(pcb->argsave, (int8_t *)argbuf);
 
-	for (i=0; i<8; i++){
+//clear file descs
+	for (i=0; i<maxfd+1; i++){
 		pcb->fdescs->position=0;
 		pcb->fdescs->inuse=0;
 		pcb->fdescs->inode=0;
 	}
 
-	tss.esp0= 0x800000-0x2000*openprocess-4; //need openprocess number
+	//set tss
+
+	tss.esp0= MB8-KB8*openprocess-4; //need openprocess number
 	tss.ss0=KERNEL_DS;
 	kstackbottom=tss.esp0;
 
@@ -225,18 +189,11 @@ int openprocess;
 	 open((uint8_t *) "stdin");
 	 open((uint8_t *) "stdout");
 
-//printf("going to end\n");
-	// for(i=0; i<31; i++){
-	// 	*((int *) entrypoint + i) = i;
-	// }
-	// for(i=0; i<31; i++){
-	// 	printf("0x%#x ",*(uint8_t *) (entrypoint+i));
-	// }
-//printf("\n");
+
 	 asm volatile("movl %%esp, %0":"=g"(pcb->espsave));
 	gotouser(entrypoint);
 asm volatile ("haltreturn:");
-//printf("end\n");
+
 	
 	uint32_t temp;
 	temp = ((pcb_t *)((uint32_t)&temp & PCBALIGN))->savestatus;
@@ -245,9 +202,10 @@ asm volatile ("haltreturn:");
 }
 
 
-
+//intputs the status
+//halts the program and goes back to previous process
 int32_t halt(int8_t status){
-	//return 0;
+	
 	int i;
 	uint8_t buf[4];
 	pcb_t * pcb= (pcb_t *)(kstackbottom &PCBALIGN);
@@ -267,16 +225,16 @@ int32_t halt(int8_t status){
 
 	//mark that process is done and available
 
-	uint8_t bitmask=0x7F;
+	uint8_t bitmask=EMPTYMASK;
 	for(i=0; i<pcb->process; i++){
-		bitmask= (bitmask >>1)+0x80;
+		bitmask= (bitmask >>1)+MASK;
 	}
 	running &=bitmask;
 
 	current= pcb->parent_process;
 
 
-//pdaddr= (uint32_t)(&dir[pcb->parent_process]); //need to make pagedirs
+
 	pdaddr= getaddr(pcb->parent_process);
 //set paging to new page directory
 	asm volatile ("				\
@@ -292,6 +250,7 @@ int32_t halt(int8_t status){
 		:"%eax"
 		);
 
+//set tss
 tss.esp0= pcb->kernel_sp; 
 tss.ss0= pcb->kernel_ss;
 	kstackbottom=tss.esp0;
@@ -299,16 +258,9 @@ tss.ss0= pcb->kernel_ss;
 
 	pcb->savestatus= status;
 
-
-	// asm volatile ("movl %0, %%esp   ;"
-	// 	::"g"(pcb->kernel_sp));
-
-	// asm volatile ( "movl %0, %%ebp     ;"
-	// 				::"g"(pcb->kernel_bp));
-
 	
 
-
+//go bacck to execute
 	asm volatile ("movl %0, %%ebp     ;"
 				"movl %1, %%esp     ;"
 				"jmp haltreturn  ;"
@@ -341,34 +293,36 @@ void stdoutopen (int32_t fd){
 	pcb->fdescs[fd].inuse=1;
 }
 
+//opens file given by filename
+//returns file descriptor or -1 if fail
 int32_t open(const uint8_t * filename){
 
 	dentry_t mydentry;
 	int i;
 
-	if(*filename=='\0' || filename==NULL)
+	if(*filename=='\0' || filename==NULL) //check if valid
 		return -1;
 
 	pcb_t  * pcb= (pcb_t *) (kstackbottom & PCBALIGN);
 
 
-	if( strncmp((const int8_t *)filename,(const int8_t *) "stdin", 5) ==0){
+	if( strncmp((const int8_t *)filename,(const int8_t *) "stdin", 5) ==0){ //check if stdin
 		stdinopen(0);
 		return 0;
 	}
 
-	if( strncmp((const int8_t *)filename,(const int8_t *) "stdout", 5) ==0){
+	if( strncmp((const int8_t *)filename,(const int8_t *) "stdout", 5) ==0){ //check if stdout
 		stdoutopen(1);
 		return 0;
 	}
 
-	if (read_dentry_by_name(filename, &mydentry)==-1)
+	if (read_dentry_by_name(filename, &mydentry)==-1) //read the file
 		return -1;
 
-	for( i=2; i<8; i++){
+	for( i=2; i<8; i++){ //set file desc
 
-		if (pcb->fdescs[i].inuse==0){
-			if(mydentry.ftype==RTCTYPE){
+		if (pcb->fdescs[i].inuse==0){ //if not in use
+			if(mydentry.ftype==RTCTYPE){ //set to rtc
 				if(rtc_open()==-1)
 					return -1;
 				else
@@ -377,29 +331,29 @@ int32_t open(const uint8_t * filename){
 		
 
 
-		else if (mydentry.ftype==DIRTYPE){
+		else if (mydentry.ftype==DIRTYPE){ //set to dir
 			pcb->fdescs[i].jumptable= &dirtable;
 		}
 
-		else if (mydentry.ftype==FILETYPE){
+		else if (mydentry.ftype==FILETYPE){ //set to file
 			pcb->fdescs[i].jumptable= &filetable;
 		}
 
 
-		pcb->fdescs[i].inode=mydentry.inode;
+		pcb->fdescs[i].inode=mydentry.inode; //set inode, inuse, filename
 		pcb->fdescs[i].inuse=1;
 		strcpy((int8_t *)pcb->names[i], (const int8_t *)filename);
 		return i;
 	
 	}
 }
-//printf("Full File Descriptor Arrary\n");
+printf("Full File Descriptor Arrary\n"); //if fail
 return -1;
 
 }
 
 //close inputted file descriptor
-
+//returns based on individual close function
 int32_t close( int32_t fd){
 
 	int value;
@@ -407,30 +361,25 @@ int32_t close( int32_t fd){
 	pcb_t * pcb= (pcb_t *)(kstackbottom &PCBALIGN);
 
 
-	if(fd >7 || fd <2 || pcb->fdescs[fd].inuse==0) //check if valid
+	if(fd >maxfd || fd <2 || pcb->fdescs[fd].inuse==0) //check if valid
 		return -1;
 
 
-//call close function
-	// asm volatile("call *%0 		;"
-	// 				:
-	// 				: "g" (pcb->fdescs[fd].jumptable[3]));
 
-	// asm volatile("movl %%eax, %0": "=g"(value));
-//get return value
 
-pcb->fdescs[fd].jumptable->close(fd);
+value=pcb->fdescs[fd].jumptable->close(fd);//call close
 //reset descriptor info
 	pcb->fdescs[fd].inode=0;
 	pcb->fdescs[fd].position=0;
 	pcb->fdescs[fd].inuse=0;
 	pcb->fdescs[fd].jumptable=NULL;
 
-	return value;
+	return value; //return if success or fail
 
 }
 
-
+//calls read on fd
+//returns successes or -1 if fail
 int32_t read(int32_t fd, void *buf, int32_t nbytes){
 
 	sti();
@@ -440,45 +389,31 @@ int32_t read(int32_t fd, void *buf, int32_t nbytes){
 	pcb_t * pcb= (pcb_t *)(kstackbottom & PCBALIGN);
 
 
-	if(fd >7 || fd < 0 || pcb->fdescs[fd].inuse==0 ||buf==NULL) //check if valid
+	if(fd >maxfd || fd < 0 || pcb->fdescs[fd].inuse==0 ||buf==NULL) //check if valid
 		return -1;
 
 	uint8_t * filename= pcb->names[fd];
-	uint32_t position= pcb->fdescs[fd].position;
-
-	// asm volatile ("pushl %0     ;"
-	// 				"pushl %1    ;"
-	// 				"pushl %2    ;"
-	// 				"pushl %3    ;"
-	// 				"call *%4    ;"
-	// 				:
-	// 				: "g" (position), "g" ((int32_t)filename), "g"(nbytes), "g" ((int32_t) buf), "g" (pcb->fdescs[fd].jumptable[1]));
+	uint32_t position= pcb->fdescs[fd].position; //save info
 
 
-	// asm volatile ("movl %%eax, %0" : "=g"(successes));
-	// asm volatile ("addl $16, %esp    ;");
-
-successes += pcb->fdescs[fd].jumptable->read( (int8_t *) filename, position,buf, nbytes);
+successes += pcb->fdescs[fd].jumptable->read( (int8_t *) filename, position,buf, nbytes); //read
 	pcb->fdescs[fd].position += successes;
 	return successes;
 
 }
 
-
+//writes to fd
+//returns 0 if success, -1 if fail
 int32_t write(int32_t fd, void *buf, int32_t nbytes){
 
 	pcb_t * pcb= (pcb_t *)(kstackbottom &PCBALIGN);
 
 
-	if(fd >7 || fd < 0 || pcb->fdescs[fd].inuse==0 ||buf==NULL) //check if valid
+	if(fd >maxfd || fd < 0 || pcb->fdescs[fd].inuse==0 ||buf==NULL) //check if valid
 		return -1;
 
-	// asm volatile ("pushl %0     ;"
-	// 				"pushl %1    ;"
-	// 				"call *%2    ;"
-	// 				:
-	// 				: "g" (nbytes), "g" ((int32_t) buf), "g" (pcb->fdescs[fd].jumptable[2]));
-	pcb->fdescs[fd].jumptable->write(fd, buf, nbytes);
+	
+	pcb->fdescs[fd].jumptable->write(fd, buf, nbytes); //call write
 
 	return 0;
 
