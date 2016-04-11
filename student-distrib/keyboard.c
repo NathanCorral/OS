@@ -84,9 +84,12 @@ int32_t keyboard_read(void* buf, int32_t nbytes){
 		c = stdin[buf_incidx(start)];
 		((char *) buf)[bytesread++] = c;
 		if(c == '\n'){
-
-start= end;
-			break;	}	
+			start= end;
+			break;	
+		}
+		// Get rid of backspace and input before
+		else if(c == BACKSPACE)
+			bytesread-=2;
 	}
 	return bytesread;
 }
@@ -145,6 +148,8 @@ void keyboard_handle(){
 
 				buf_decidx(end);
 			}
+
+			stdin[buf_incidx(end)] = BACKSPACE;
 
 			terminal_backspace();
 			break;
