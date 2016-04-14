@@ -281,6 +281,8 @@ int read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t length){
 	if(offset < 0 || buf == NULL)
 		return -1;
 
+	if (offset== inodes[inode].size)
+		return 0;
 	// Read offset is greater than file size
 	if(inodes[inode].size <= offset)
 		return -1;
@@ -319,7 +321,7 @@ int read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t length){
 		}
 		count++;
 	}
-	return ret;
+	return success;
 }
 
 
@@ -361,7 +363,7 @@ return strlen((int8_t *) buf);
 
 
 //reads file, acts like fsread
-int fileread(uint8_t * buf, uint32_t length, const int8_t * fname, uint32_t offset){
+int fileread( const int8_t * fname, uint32_t offset, uint8_t * buf,uint32_t length){
 	return fsread(fname, offset, buf, length); //same as fs read
 }
 

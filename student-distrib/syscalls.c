@@ -99,6 +99,7 @@ int openprocess;
 		}
 
 	}
+	argbuf[i-namelength-1]= '\0';
 //printf ("parsed\n");
 
 
@@ -233,7 +234,9 @@ int32_t halt(int8_t status){
 
 	current= pcb->parent_process;
 
-
+for (i=0; i<maxfd+1; i++){
+		close(i);
+	}
 
 	pdaddr= getaddr(pcb->parent_process);
 //set paging to new page directory
@@ -389,7 +392,7 @@ int32_t read(int32_t fd, void *buf, int32_t nbytes){
 	pcb_t * pcb= (pcb_t *)(kstackbottom & PCBALIGN);
 
 
-	if(fd >maxfd || fd < 0 || pcb->fdescs[fd].inuse==0 ||buf==NULL) //check if valid
+	if(fd >maxfd || fd < 0 || pcb->fdescs[fd].inuse==0 ||buf==NULL || fd==1) //check if valid
 		return -1;
 
 	uint8_t * filename= pcb->names[fd];
@@ -398,26 +401,79 @@ int32_t read(int32_t fd, void *buf, int32_t nbytes){
 
 successes += pcb->fdescs[fd].jumptable->read( (int8_t *) filename, position,buf, nbytes); //read
 	pcb->fdescs[fd].position += successes;
+//printf("%d \n", successes);
+
+	//printf("buffer:");
+// for (i=0; i<nbytes; i++){
+ 	//printf("%s", (uint8_t *) buf);
+// }
+//printf("%d \n", successes);
 	return successes;
 
 }
 
 //writes to fd
-//returns 0 if success, -1 if fail
+//returns # of successes, -1 if fail
 int32_t write(int32_t fd, void *buf, int32_t nbytes){
+//printf("in write");
+	pcb_t * pcb= (pcb_t *)(kstackbottom &PCBALIGN);
+
+int successes=0;
+	if(fd >maxfd || fd < 1 || pcb->fdescs[fd].inuse==0 ||buf==NULL) //check if valid
+		return -1;
+
+	
+	successes +=pcb->fdescs[fd].jumptable->write(fd, buf, nbytes); //call write
+
+	return successes;
+
+}
+
+int32_t getargs (uint8_t* buf, int32_t nbytes){
+
+	if(nbytes==0 || buf==NULL)
+		return -1;
+
+
 
 	pcb_t * pcb= (pcb_t *)(kstackbottom &PCBALIGN);
 
 
-	if(fd >maxfd || fd < 0 || pcb->fdescs[fd].inuse==0 ||buf==NULL) //check if valid
+// printf("pcb buffer:");
+// for (i=0; i<nbytes; i++){
+// 	printf("%c", pcb->argsave[i]);
+// }
+// printf("\n");
+
+	if (strlen ((const int8_t*)pcb->argsave)>nbytes)
 		return -1;
 
-	
-	pcb->fdescs[fd].jumptable->write(fd, buf, nbytes); //call write
+	strcpy((int8_t*) buf, (const int8_t *)pcb->argsave);
 
+// printf("buffer:");
+// for (i=0; i<nbytes; i++){
+// 	printf("%c", buf[i]);
+// }
+// printf("\n");
 	return 0;
-
 }
 
+
+int32_t vidmap (uint8_t ** screen_start){
+	if((uint32_t) screen_start < VIRT128 || (uint32_t) screen_start > VIRT128+ksize )
+		return -1;
+
+
+*screen_start= (uint8_t *) kb; //sets to user accessible video memory
+	return 0;
+}
+
+int32_t set_handler (int32_t signum, void * handler_address){
+	return 0;
+}
+
+int32_t sigreturn (void){
+	return 0;
+}
 
 

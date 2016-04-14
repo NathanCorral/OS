@@ -4,11 +4,15 @@
 #include "types.h"
 
 
-#define kb 0x1000
+
 #define progimg 0x20
+
+#define useridx 0x1
+#define uservideo 0x1000
+
 #define viddiv 0xB8
 #define video 0xB8000
-#define ksize 0x400000
+
 #define readshift 1
 #define useshift 2
 #define writetshift 3
@@ -81,15 +85,27 @@ dir[0].pagedir[i]=0;
 
 }
 
-//set flags to allow read/write, allowing user access, declaring present
+//set flags to allow read/write,  not allowing user access, declaring present
+tp=1;
+tr=1;
+tu=0;
+tflags= (tp | (tr << readshift) | (tu << useshift) |(tw << writetshift) | (tc << cacheshift) | (ta <<accessshift) | (td <<dirtyshift) | (tg << globalshift));
+
+//put video memory into table
+pagetable[viddiv]= video;
+pagetable[viddiv] |= tflags;
+
+
+//allow user access to video
+
 tp=1;
 tr=1;
 tu=1;
 tflags= (tp | (tr << readshift) | (tu << useshift) |(tw << writetshift) | (tc << cacheshift) | (ta <<accessshift) | (td <<dirtyshift) | (tg << globalshift));
 
 //put video memory into table
-pagetable[viddiv]= video;
-pagetable[viddiv] |= tflags;
+pagetable[useridx]= video;
+pagetable[useridx] |= tflags;
 
 
 //declare present, allow read/write, allow user

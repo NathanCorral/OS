@@ -11,6 +11,8 @@
 #define OFFSET_E 0x003FFFFF
 #define DIRECTORY_OFFSET 22
 #define TABLE_OFFSET 12
+#define ksize 0x400000
+#define kb 0x1000
 
 #define SET_P 1
 #define SET_R (1 << 1)

@@ -6,7 +6,7 @@ void rtc_handle(){
 	cli();
 	//printf("%d in rtc \n", count++);
 	send_eoi(8);
-	//interrupt++;
+	interrupt++;
 	outb(RTC_REG_C,RTC_PORT);	// select register C
 	inb(CMOS_PORT);		// just throw away contents
 	sti();
@@ -35,6 +35,7 @@ int32_t rtc_close(int32_t fd){
 	return 0; 
 }
 int32_t rtc_read(const int8_t *fname, uint32_t offset, uint8_t * buf, uint32_t nbytes){
+	sti();
 	while(interrupt == 0){ // Do nothing until the interrupt handler clears the flag
 		/* Wait for an interrupt to occur */
 	}

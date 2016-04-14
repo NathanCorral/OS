@@ -47,10 +47,10 @@ sysjump:
   	.long write
   	.long open
   	.long close
- // 	.long getargs
- // 	.long vidmap
- // 	.long set_handler
- // 	.long sigreturn 
+  	.long getargs
+ 	.long vidmap
+ 	.long set_handler
+  	.long sigreturn 
 
 
 gotouser:

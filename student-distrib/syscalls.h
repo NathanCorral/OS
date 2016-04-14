@@ -13,6 +13,8 @@
 #define ENTRYPT 24
 #define PROGADDR 0x08048000
 #define PCBALIGN 0xFFFFE000
+#define VIRT128  0x08000000
+
 
 typedef struct fops {
 	int32_t (*open)(const uint8_t* filename);

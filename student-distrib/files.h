@@ -67,7 +67,7 @@ int read_data(uint32_t inode, uint32_t offset, uint8_t * buf, uint32_t length);
 int fsread(const int8_t *fname, uint32_t offset, uint8_t * buf, uint32_t length);
 
 int dirread(const int8_t *fname, uint32_t offset, uint8_t * buf, uint32_t length);
-int fileread(uint8_t * buf, uint32_t length, const int8_t * fname, uint32_t offset);
+int fileread( const int8_t * fname, uint32_t offset, uint8_t * buf,uint32_t length);
 
 int fstomem(const int8_t *fname, uint32_t address);
 
