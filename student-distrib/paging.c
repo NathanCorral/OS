@@ -175,6 +175,9 @@ for(i=0; i<tablesize; i++){
 	tflags= (tp | (tr << readshift) | (tu << useshift) |(tw << writetshift) | (tc << cacheshift) | (ta <<accessshift) | (td <<dirtyshift) | (tg << globalshift));
 
 newtable[i]= i* kb;
+if (i==1){
+newtable[i]= video;	
+}
 newtable[i] |= tflags;
 }
 //printf("newtable addr:%x\n",newtable);
