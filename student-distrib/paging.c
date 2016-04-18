@@ -7,7 +7,7 @@
 
 #define progimg 0x20
 
-#define useridx 0x1
+#define useridx 1
 #define uservideo 0x1000
 
 #define viddiv 0xB8
@@ -142,7 +142,8 @@ dir[0].pagedir[1]=kpage;
 
 }
 
-
+//create the new page table system for the intputted process
+//returns -1 if fail, 0 if success
 int32_t newtask( uint8_t process){
 
 uint32_t i;
@@ -159,7 +160,7 @@ int tr=0;
 int tp=0;
 int tflags=0;
 
-
+//make new table
 newpagedir=(uint32_t)(&dir[process]);
 for(i=0; i<tablesize; i++){
 	if(i==0)
@@ -175,14 +176,13 @@ for(i=0; i<tablesize; i++){
 	tflags= (tp | (tr << readshift) | (tu << useshift) |(tw << writetshift) | (tc << cacheshift) | (ta <<accessshift) | (td <<dirtyshift) | (tg << globalshift));
 
 newtable[i]= i* kb;
-if (i==1){
+if (i==useridx){ //set to video memory
 newtable[i]= video;	
 }
 newtable[i] |= tflags;
 }
-//printf("newtable addr:%x\n",newtable);
-//printf("newtable entry:%x\n",newtable[2]);
 
+//set table into directory
 int dg=0;
 int ds=0;
 int da=0;
@@ -202,9 +202,9 @@ dflags=(dp | (dr << readshift) | (du << useshift) |(dw << writetshift) | (dd << 
 
 dir[process].pagedir[0]= (uint32_t)newtable;
 dir[process].pagedir[0] |= dflags;
-//printf("process, dir entry:%d, %x\n",process,dir[process].pagedir[0]);
 
 
+//put kernal page in directory
 
 dp=1;
 dr=1;
@@ -218,9 +218,9 @@ dflags=(dp | (dr << readshift) | (du << useshift) |(dw << writetshift) | (dd << 
 kpage= ksize;
 kpage |= dflags;
 dir[process].pagedir[1]=kpage;
-//printf("kpage:%x\n",dir[process].pagedir[1]);
 
 
+//put program page into directory
 dp=1;
 dr=1;
 du=1;
@@ -232,8 +232,8 @@ dflags=(dp | (dr << readshift) | (du << useshift) |(dw << writetshift) | (dd << 
 dir[process].pagedir[progimg]= (process+2)*ksize;
 dir[process].pagedir[progimg] |= dflags;
 
-//printf("0x20: %x\n",dir[process].pagedir[0x20] );
 
+//set paging registers
 
 asm volatile ("				\
 		movl %0, %%cr3 \n\
@@ -251,6 +251,7 @@ asm volatile ("				\
 		return 0;
 }
 
+//returns address of directory of process
 uint32_t getaddr(uint8_t process){
 	return (uint32_t) &dir[process];
 }

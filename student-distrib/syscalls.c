@@ -6,6 +6,7 @@
 #define EMPTYMASK 0x7F
 #define KB8 0x2000
 #define MASK 0x80
+#define NameSize 32
 uint32_t kstackbottom;
 uint8_t running= 0;
 uint8_t current=0;
@@ -61,12 +62,12 @@ fops_t dirtable = {
 
 int32_t execute(const int8_t * cmd){
 	uint8_t buf[4];
-	int8_t fname[32] = {[0 ... 31] = 0};
+	int8_t fname[NameSize] = {[0 ... 31] = 0};
 	uint32_t entrypoint;
 	uint8_t exnumbers[4]= {0x7F, 0x45, 0x4C, 0x46};
 	uint32_t spaceflag;
 	uint32_t namelength;
-	uint8_t argbuf[1024];
+	uint8_t argbuf[tablesize];
 	int i;
 
 
@@ -92,7 +93,7 @@ int openprocess;
 			argbuf[i-namelength-1]= cmd[i];
 		}
 		else{
-			if (i>=32 && spaceflag==0){
+			if (i>=NameSize && spaceflag==0){
 				return -1;
 			}
 			fname[i]= cmd[i];
@@ -391,23 +392,27 @@ int32_t read(int32_t fd, void *buf, int32_t nbytes){
 
 	pcb_t * pcb= (pcb_t *)(kstackbottom & PCBALIGN);
 
-
+//error checking and saving
 	if(fd >maxfd || fd < 0 || pcb->fdescs[fd].inuse==0 ||buf==NULL || fd==1) //check if valid
 		return -1;
 
 	uint8_t * filename= pcb->names[fd];
-	uint32_t position= pcb->fdescs[fd].position; //save info
+	uint32_t position= pcb->fdescs[fd].position; //save info 
 
 
+
+
+
+//the actuall reading
 successes += pcb->fdescs[fd].jumptable->read( (int8_t *) filename, position,buf, nbytes); //read
-	pcb->fdescs[fd].position += successes;
-//printf("%d \n", successes);
+	
 
-	//printf("buffer:");
-// for (i=0; i<nbytes; i++){
- 	//printf("%s", (uint8_t *) buf);
-// }
-//printf("%d \n", successes);
+
+
+
+//more saving
+	pcb->fdescs[fd].position += successes;
+
 	return successes;
 
 }
@@ -418,11 +423,15 @@ int32_t write(int32_t fd, void *buf, int32_t nbytes){
 //printf("in write");
 	pcb_t * pcb= (pcb_t *)(kstackbottom &PCBALIGN);
 
+	//error checking
+
 int successes=0;
 	if(fd >maxfd || fd < 1 || pcb->fdescs[fd].inuse==0 ||buf==NULL) //check if valid
 		return -1;
 
 	
+
+
 	successes +=pcb->fdescs[fd].jumptable->write(fd, buf, nbytes); //call write
 
 	return successes;
