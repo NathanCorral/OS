@@ -25,5 +25,7 @@ void update_terminal(int screen_x, int screen_y);
 
 void terminal_enter();
 
+void save_this_terminal(uint32_t active_terminal, int viewed, void * stdin);
+
 #endif
 

@@ -29,6 +29,8 @@
 #define F2 0x3C
 #define F3 0x3D
 
+#define BUF_SIZE 128
+
 
 extern char getc();
 
@@ -37,6 +39,14 @@ extern void keyboardopen();
 extern void keyboard_init();
 extern int32_t keyboard_open();
 extern int32_t keyboard_close();
+
+typedef struct buf_t {
+	uint8_t buf[BUF_SIZE];
+	int start;
+	int end;
+	int x;
+	int y;
+}buf_t;
 
 
 

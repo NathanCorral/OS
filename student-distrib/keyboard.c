@@ -3,22 +3,20 @@
 #define RELEASE(key) (key |0x80)
 
 
-#define BUF_SIZE 128
+#define buf_used(buf) ((buf.start) <= (buf.end) ? \
+				  ((buf.end) - (buf.start))  \
+				: (BUF_SIZE + (buf.end) - (buf.start)))
 
-#define buf_used(start,end) ((start) <= (end) ? \
-				  ((end) - (start))  \
-				: (BUF_SIZE + (end) - (start)))
-
-#define buf_room(start,end) (BUF_SIZE - buf_used(start,end) - 1)
-#define buf_empty(start, end) ((start) == (end))
-#define buf_full(start, end) ((((end)+1)%BUF_SIZE) == (start))
+#define buf_room(buf) (BUF_SIZE - buf_used(buf) - 1)
+#define buf_empty(buf) ((buf.start) == (buf.end))
+#define buf_full(buf) ((((buf.end)+1)%BUF_SIZE) == (buf.start))
 #define buf_incidx(idx) ((idx) = ((idx)+1) % BUF_SIZE)
 #define buf_decidx(idx) ((idx) = ((idx)-1) % BUF_SIZE)
 
-char stdin[3][BUF_SIZE];
-int start, end;
-int viewed;
 
+#define get_char(terminal, stdin) (stdin[terminal].buf[buf_incidx(stdin[terminal].start)])
+#define write_char(terminal, stdin, char) ((stdin[terminal].buf[buf_incidx(stdin[terminal].end)]) = char)
+buf_t stdin[3];
 
 static uint8_t keychar [64]={
 '\0', '\0', '1','2','3','4','5','6','7','8','9','0','-','=','\0','\0',
@@ -45,23 +43,27 @@ static uint8_t altset = 0;
 
 
 void keyboard_init(){
-	start = 0;
-	end = 0;
+	int i;
+	for(i=0; i<3; i++) {
+		stdin[i].start = 0;
+		stdin[i].end = 0;
+	}
 	enable_irq(1);
 }
 
 // Get next char from input
 char getc(){
-	if(buf_empty(start,end))
+	uint32_t active_terminal = getactiveterm();
+	if(buf_empty(stdin[active_terminal]))
 		return -1; // error check
 	char c;
-	uint32_t active_terminal = getactiveterm();
-	c = stdin[active_terminal][buf_incidx(start)];
+	c = get_char(active_terminal, stdin);
 	return c;
 }
 
 int32_t keyboard_open(){
-	start = end;
+	uint32_t active_terminal = getactiveterm();
+	stdin[active_terminal].start = stdin[active_terminal].end;
 	return 0;
 }
 
@@ -80,12 +82,12 @@ int32_t keyboard_read(void* buf, int32_t nbytes){
 	// Keep writing until we fill up buffer or hit a new line
 	while( bytesread < nbytes ){
 		// Wait for new input
-		while(buf_empty(start,end));
+		while(buf_empty(stdin[active_terminal]));
 
-		c = stdin[active_terminal][buf_incidx(start)];
+		c = get_char(active_terminal, stdin);
 		((char *) buf)[bytesread++] = c;
 		if(c == '\n'){
-			start= end;
+			stdin[active_terminal].start= stdin[active_terminal].end;
 			break;	
 		}
 		// Get rid of backspace and input before
@@ -146,23 +148,24 @@ void keyboard_handle(){
 
 		case BACKSPACE :
 		//stdin[buf_incidx(end)]= '\0';
-			if(!buf_empty(start,end)){
+			if(!buf_empty(stdin[active_terminal])){
 
-				buf_decidx(end);
+				buf_decidx(stdin[active_terminal].end);
 			}
 
-			stdin[active_terminal][buf_incidx(end)] = BACKSPACE;
-
+			//stdin[active_terminal][buf_incidx(end)] = BACKSPACE;
+			write_char(active_terminal, stdin, BACKSPACE);
 			terminal_backspace();
 			break;
 
 		case ENTER :
 			// Throw away last character if stdin is full and
 			// replace it with new line
-			if(buf_full(start,end))
-				buf_decidx(end);
+			if(buf_full(stdin[active_terminal]))
+				buf_decidx(stdin[active_terminal].end);
 
-			stdin[active_terminal][buf_incidx(end)] = '\n';
+			//stdin[active_terminal][buf_incidx(end)] = '\n';
+			write_char(active_terminal, stdin, '\n');
 			//terminal_enter();
 			terminal_input('\n');
 			//start = end;
@@ -190,23 +193,25 @@ void keyboard_handle(){
 				terminal_ctr(key_input);
 
 			else if (altset){
-				
+				int viewed;
 				if(key==F1)
 					viewed= 0;
 				else if(key==F2)
 					viewed=1;
 				else if (key==F3)
 					viewed=2;
+				save_this_terminal(active_terminal, viewed, stdin);
 //printf("term: %d\n", viewed);
 				switchterm(viewed);
 			}
 			
 
 			else{
-				if(buf_full(start, end) || key_input == '\0')
+				if(buf_full(stdin[active_terminal]) || key_input == '\0')
 					break;
 				
-				stdin[active_terminal][buf_incidx(end)] = key_input;
+				//stdin[active_terminal][buf_incidx(end)] = key_input;
+				write_char(active_terminal, stdin, key_input);
 		
 				terminal_input(key_input);
 			}

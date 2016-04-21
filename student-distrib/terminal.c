@@ -97,6 +97,13 @@ void update_terminal(screen_x, screen_y){
 	y = screen_y;
 }
 
+void save_this_terminal(uint32_t active_terminal, int viewed, void * stdin) {
+	buf_t * st = (buf_t *) stdin;
+	st[active_terminal].x = x;
+	st[active_terminal].y = y;
+	update_screen(st[viewed].x, st[viewed].y);
+}
+
 // Unused.  May be repurposed for shell
 /*
 void terminal_shell(){
