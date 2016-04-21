@@ -8,6 +8,7 @@
 #include "terminal.h"
 #include "rtc.h"
 #include "syscallhandle.h"
+#include "lib.h"
 
 
 #define ENTRYPT 24
@@ -45,6 +46,8 @@ typedef struct pcb_t{
 	int8_t parent_process; 	
 	int8_t argsave[1024];
 	int32_t savestatus;
+	uint32_t term;
+	uint32_t haschild;
 }pcb_t;
 
 // function to execute user code

@@ -7,6 +7,14 @@
 
 #include "types.h"
 #include "terminal.h"
+ #define VIDEO 0xB8000
+#define NUM_COLS 80
+#define NUM_ROWS 25
+#define ATTRIB 0x7
+ #define KB4 0x1000
+ #define VIDBUF0 0x2000
+ #define VIDBUF1 0x3000
+ #define VIDBUF2 0x4000
 
 int32_t printf(int8_t *format, ...);
 void putc(uint8_t c);
@@ -37,6 +45,13 @@ int8_t* strncpy(int8_t* dest, const int8_t*src, uint32_t n);
 /* Userspace address-check functions */
 int32_t bad_userspace_addr(const void* addr, int32_t len);
 int32_t safe_strncpy(int8_t* dest, const int8_t* src, int32_t n);
+
+
+
+void setactiveterm(int term);
+
+uint32_t getactiveterm();
+void switchterm(int newterm);
 
 /* Port read functions */
 /* Inb reads a byte and returns its value as a zero-extended 32-bit

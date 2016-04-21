@@ -1,5 +1,4 @@
 
-
 #include "terminal.h"
 
 int x, y, handle_inputs;
@@ -138,4 +137,5 @@ void terminal_shell(){
 	}
 }
 */
+
 

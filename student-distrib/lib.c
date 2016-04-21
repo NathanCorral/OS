@@ -3,10 +3,7 @@
  */
 
 #include "lib.h"
-#define VIDEO 0xB8000
-#define NUM_COLS 80
-#define NUM_ROWS 25
-#define ATTRIB 0x7
+
  // 0xFA0 is 4000 Bytes, the size of video memory
 #define VIDEO_SIZE 0x0FA0 - ((NUM_COLS)*(NUM_ROWS) << 1) // (4 kB - space to store one screen)
 #define SCROLL_MAX VIDEO_SIZE
@@ -18,6 +15,10 @@ static int screen_y;
 static char* video_mem = (char *)VIDEO;
 static unsigned int offset = 0;
 static int scrolled;
+static int activeterm=0;
+static int processingterm=0;
+
+static char * vidbuff[3]={(char *) VIDBUF0, (char *) VIDBUF1, (char *) VIDBUF2};
 /*
 * void clear(void);
 *   Inputs: void
@@ -74,6 +75,23 @@ void update_screen(int x, int y){
 	screen_x = x;
 	screen_y = y;
 	updatecursor(0);
+}
+
+void setactiveterm(int term){
+	if(term>=0 && term<3)
+		activeterm=term;
+}
+
+void switchterm(int newterm){
+	if(newterm>=0 && newterm<3){
+		memcpy(vidbuff[activeterm], video_mem, KB4); //save video memory
+		memcpy(video_mem, vidbuff[newterm], KB4); //show new memory
+		setactiveterm(newterm);
+	}
+}
+
+uint32_t getactiveterm(){
+	return activeterm;
 }
 
 int32_t gety(){

@@ -17,6 +17,7 @@
 
 char stdin[BUF_SIZE];
 int start, end;
+int viewed;
 
 
 static uint8_t keychar [64]={
@@ -185,6 +186,18 @@ void keyboard_handle(){
 			// Control keys are not displayed and are used for commands.
 			if(ctrlset)
 				terminal_ctr(key_input);
+
+			else if (altset){
+				
+				if(key==F1)
+					viewed= 0;
+				else if(key==F2)
+					viewed=1;
+				else if (key==F3)
+					viewed=2;
+//printf("term: %d\n", viewed);
+				switchterm(viewed);
+			}
 			
 
 			else{
@@ -197,6 +210,8 @@ void keyboard_handle(){
 			}
 
 	}
+
+	
 
 	spin_unlock(lock);
 	send_eoi(1);
@@ -417,5 +432,6 @@ sti();
 
 >>>>>>> .r13978
 */
+
 
 

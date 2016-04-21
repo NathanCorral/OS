@@ -25,6 +25,10 @@
 #define PORT 0x60
 #define LKEY 0x26
 #define ALLRELEASE 0x59	
+#define F1 0x3B
+#define F2 0x3C
+#define F3 0x3D
+
 
 extern char getc();
 
@@ -46,3 +50,4 @@ extern void keyboard_handle();
 
 
 #endif
+

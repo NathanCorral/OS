@@ -164,9 +164,15 @@ int openprocess;
 //check if 0th open process
 	if( running ==MASK){
 		pcb->parent_process= -1;
+		pcb->term=0;
 	}
+	// else if(running== MASK<<1){
+	// 	pcb->parent_process=0;
+	// }
 	else{
 		pcb->parent_process= ((pcb_t *)((uint32_t)&esp & PCBALIGN))->process;
+		((pcb_t *)((uint32_t)&esp & PCBALIGN))->haschild=1;
+		pcb->term=((pcb_t *)((uint32_t)&esp & PCBALIGN))->term;
 	}
 
 	pcb->process= openprocess; 
@@ -238,6 +244,9 @@ int32_t halt(int8_t status){
 for (i=0; i<maxfd+1; i++){
 		close(i);
 	}
+
+pcb_t * parentpcb = (pcb_t *)( MB8 - KB8*(pcb->parent_process + 1) );
+	parentpcb->haschild = 0;
 
 	pdaddr= getaddr(pcb->parent_process);
 //set paging to new page directory
@@ -471,11 +480,26 @@ int32_t getargs (uint8_t* buf, int32_t nbytes){
 int32_t vidmap (uint8_t ** screen_start){
 	if((uint32_t) screen_start < VIRT128 || (uint32_t) screen_start > VIRT128+ksize )
 		return -1;
+pcb_t * pcb= (pcb_t *)(kstackbottom &PCBALIGN);
+uint32_t theterm= pcb->term;
 
+if (theterm==0)
+*screen_start= (uint8_t *) VIDBUF0; //sets to user accessible video memory
 
-*screen_start= (uint8_t *) kb; //sets to user accessible video memory
+else if (theterm==1)
+	*screen_start= (uint8_t *) VIDBUF1; //0
+
+else if (theterm==2)
+	*screen_start= (uint8_t *) VIDBUF2;
+else
+	*screen_start= (uint8_t *) VIDBUF0;
 	return 0;
 }
+
+
+
+
+
 
 int32_t set_handler (int32_t signum, void * handler_address){
 	return 0;
