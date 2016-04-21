@@ -15,7 +15,7 @@
 #define buf_incidx(idx) ((idx) = ((idx)+1) % BUF_SIZE)
 #define buf_decidx(idx) ((idx) = ((idx)-1) % BUF_SIZE)
 
-char stdin[BUF_SIZE];
+char stdin[3][BUF_SIZE];
 int start, end;
 int viewed;
 
@@ -55,8 +55,8 @@ char getc(){
 	if(buf_empty(start,end))
 		return -1; // error check
 	char c;
-	
-	c = stdin[buf_incidx(start)];
+	uint32_t active_terminal = getactiveterm();
+	c = stdin[active_terminal][buf_incidx(start)];
 	return c;
 }
 
@@ -72,6 +72,7 @@ int32_t keyboard_close(){
 int32_t keyboard_read(void* buf, int32_t nbytes){
 	int bytesread=0;
 	char c;
+	uint32_t active_terminal = getactiveterm();
 
 	if(buf == NULL || nbytes < 0)
 		return -1;	
@@ -81,7 +82,7 @@ int32_t keyboard_read(void* buf, int32_t nbytes){
 		// Wait for new input
 		while(buf_empty(start,end));
 
-		c = stdin[buf_incidx(start)];
+		c = stdin[active_terminal][buf_incidx(start)];
 		((char *) buf)[bytesread++] = c;
 		if(c == '\n'){
 			start= end;
@@ -108,6 +109,7 @@ void keyboard_handle(){
 	uint8_t key_input;
 
 	key = inb(PORT);
+	uint32_t active_terminal = getactiveterm();
 
 	spin_lock(lock);
 
@@ -149,7 +151,7 @@ void keyboard_handle(){
 				buf_decidx(end);
 			}
 
-			stdin[buf_incidx(end)] = BACKSPACE;
+			stdin[active_terminal][buf_incidx(end)] = BACKSPACE;
 
 			terminal_backspace();
 			break;
@@ -160,7 +162,7 @@ void keyboard_handle(){
 			if(buf_full(start,end))
 				buf_decidx(end);
 
-			stdin[buf_incidx(end)] = '\n';
+			stdin[active_terminal][buf_incidx(end)] = '\n';
 			//terminal_enter();
 			terminal_input('\n');
 			//start = end;
@@ -204,7 +206,7 @@ void keyboard_handle(){
 				if(buf_full(start, end) || key_input == '\0')
 					break;
 				
-				stdin[buf_incidx(end)] = key_input;
+				stdin[active_terminal][buf_incidx(end)] = key_input;
 		
 				terminal_input(key_input);
 			}
