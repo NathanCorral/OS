@@ -90,6 +90,12 @@ void terminal_backspace(){
 
 void terminal_enter(){
 	// possible use for later
+	//printf("Terminal enter\n");
+	int i;
+	//for(i=0; i<100000000; i++);
+	putc(' ');
+	back_space();
+	//printf("end\n");
 }
 
 void update_terminal(screen_x, screen_y){
@@ -101,7 +107,12 @@ void save_this_terminal(uint32_t active_terminal, int viewed, void * stdin) {
 	buf_t * st = (buf_t *) stdin;
 	st[active_terminal].x = x;
 	st[active_terminal].y = y;
-	update_screen(st[viewed].x, st[viewed].y);
+	x = st[viewed].x;
+	y = st[viewed].y;
+	update_screen(x,y);
+	putc(' ');
+	back_space();
+	
 }
 
 // Unused.  May be repurposed for shell

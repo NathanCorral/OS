@@ -166,8 +166,8 @@ void keyboard_handle(){
 
 			//stdin[active_terminal][buf_incidx(end)] = '\n';
 			write_char(active_terminal, stdin, '\n');
-			//terminal_enter();
 			terminal_input('\n');
+			terminal_enter();
 			//start = end;
 			break;
 
@@ -200,9 +200,10 @@ void keyboard_handle(){
 					viewed=1;
 				else if (key==F3)
 					viewed=2;
-				save_this_terminal(active_terminal, viewed, stdin);
 //printf("term: %d\n", viewed);
+				save_this_terminal(active_terminal, viewed, stdin);
 				switchterm(viewed);
+				
 			}
 			
 

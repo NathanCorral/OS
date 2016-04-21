@@ -66,6 +66,7 @@ void back_space(){
 		screen_y--;
 		screen_x = NUM_COLS - 2;
 	}
+	
 	update_terminal(screen_x, screen_y);
 	updatecursor(0);
 }
