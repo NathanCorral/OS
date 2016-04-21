@@ -480,23 +480,31 @@ int32_t getargs (uint8_t* buf, int32_t nbytes){
 int32_t vidmap (uint8_t ** screen_start){
 	if((uint32_t) screen_start < VIRT128 || (uint32_t) screen_start > VIRT128+ksize )
 		return -1;
-pcb_t * pcb= (pcb_t *)(kstackbottom &PCBALIGN);
-uint32_t theterm= pcb->term;
+// pcb_t * pcb= (pcb_t *)(kstackbottom &PCBALIGN);
+// uint32_t theterm= pcb->term;
 
-if (theterm==0)
-*screen_start= (uint8_t *) VIDBUF0; //sets to user accessible video memory
+// if (theterm==0)
+ *screen_start= (uint8_t *) kb; //sets to user accessible video memory
 
-else if (theterm==1)
-	*screen_start= (uint8_t *) VIDBUF1; //0
+// else if (theterm==1)
+// 	*screen_start= (uint8_t *) VIDBUF1; //0
 
-else if (theterm==2)
-	*screen_start= (uint8_t *) VIDBUF2;
-else
-	*screen_start= (uint8_t *) VIDBUF0;
+// else if (theterm==2)
+// 	*screen_start= (uint8_t *) VIDBUF2;
+// else
+// 	*screen_start= (uint8_t *) VIDBUF0;
 	return 0;
 }
 
+void startup(){
 
+
+	execute("shell");
+	memcpy((char *) VIDBUF0, (char *)VIDEO, KB4);
+	memcpy((char *) VIDBUF1, (char *)VIDEO, KB4);
+	memcpy((char *) VIDBUF2, (char *)VIDEO, KB4);
+
+}
 
 
 

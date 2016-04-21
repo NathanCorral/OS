@@ -13,8 +13,8 @@
 #define ATTRIB 0x7
  #define KB4 0x1000
  #define VIDBUF0 0x2000
- #define VIDBUF1 0x3000
- #define VIDBUF2 0x4000
+ #define VIDBUF1 0x4000
+ #define VIDBUF2 0x6000
 
 int32_t printf(int8_t *format, ...);
 void putc(uint8_t c);

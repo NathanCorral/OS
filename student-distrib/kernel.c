@@ -17,6 +17,7 @@
  #include "interrupts.h"
  #include "terminal.h"
  #include "files.h"
+ #include "syscalls.h"
 
 
 
@@ -225,7 +226,8 @@ interruptinit(); //initialize interrupts
 	//while(1);
 
 
-	test_mp3_2();
+	//test_mp3_2();
+	 startup();
 
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");
