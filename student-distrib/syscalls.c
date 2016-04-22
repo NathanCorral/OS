@@ -496,14 +496,82 @@ int32_t vidmap (uint8_t ** screen_start){
 	return 0;
 }
 
-void startup(){
+int startup(){
+
+// 	uint8_t buf[4];
+// 	uint32_t i;
+// 	uint32_t j;
+// 	uint32_t entrypoint;
+	
+	
+// 	pcb_t * pcb;
+
+// if(fsread((const int8_t *)("shell"), ENTRYPT, (uint8_t *)buf, 4)==-1)
+// 		return -1;
+
+// 	for(i=0; i<4; i++){
+// 		//buf[i]= buf[i] & 0xFF;
+		
+// 		entrypoint |= (buf[i] << i*(maxfd+1)); //set entrypoint
+		
+// 	}
+
+//     for(i=3; i>0; i--) {
+// 	if( newtask(i)==-1)
+// 		return -1;
+
+// 	fstomem((const int8_t *)("shell"), PROGADDR);
+
+// 	pcb_t * pcb= (pcb_t*)(MB8-KB8*(i+1)); //get pcb
 
 
+// //save ebp, esp, ss
+// 	uint32_t esp;
+	
+// 	pcb->kernel_sp=tss.esp0;
+
+// 	uint32_t ebp;
+// 	asm volatile("movl %%ebp, %0":"=g"(ebp));
+// 	pcb->kernel_bp=ebp;
+// 	pcb->kernel_ss=tss.ss0;
+
+// 	pcb->parent_process= -1;
+// 		pcb->term=i-1;
+// 		pcb->process=i;
+// 		pcb->haschild=0;
+// 		for (j=0; j<maxfd+1; j++){
+// 		pcb->fdescs->position=0;
+// 		pcb->fdescs->inuse=0;
+// 		pcb->fdescs->inode=0;
+// 	}
+
+
+
+// tss.esp0= MB8-KB8*i-4; //need openprocess number
+// 	tss.ss0=KERNEL_DS;
+// 	kstackbottom=tss.esp0;
+
+
+// 	 open((uint8_t *) "stdin");
+// 	 open((uint8_t *) "stdout");
+// 	}
+// running |= 0x70;
+
+// 	 asm volatile("movl %%esp, %0":"=g"(pcb->espsave));
+// 	 sti();
+// 	gotouser(entrypoint);
+
+// 	return 0;
 	execute("shell");
-	memcpy((char *) VIDBUF0, (char *)VIDEO, KB4);
-	memcpy((char *) VIDBUF1, (char *)VIDEO, KB4);
-	memcpy((char *) VIDBUF2, (char *)VIDEO, KB4);
-
+	// switchterm(1);
+	// execute("shell");
+	// switchterm(2);
+	// execute("shell");
+	// switchterm(0);
+	// memcpy((char *) VIDBUF0, (char *)VIDEO, KB4);
+	// memcpy((char *) VIDBUF1, (char *)VIDEO, KB4);
+	// memcpy((char *) VIDBUF2, (char *)VIDEO, KB4);
+return 0;
 }
 
 

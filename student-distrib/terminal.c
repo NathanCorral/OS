@@ -108,11 +108,14 @@ void save_this_terminal(uint32_t active_terminal, int viewed, void * stdin) {
 	st[active_terminal].x = x;
 	st[active_terminal].y = y;
 	x = st[viewed].x;
+	// if(x<80-2) //something odd, maybe fixed by not 
+	// 	x++;
 	y = st[viewed].y;
 	update_screen(x,y);
-	putc(' ');
-	back_space();
+	//putc(' ');
+	// back_space();
 	
+	updatecursor(0);
 }
 
 // Unused.  May be repurposed for shell

@@ -201,9 +201,10 @@ void keyboard_handle(){
 				else if (key==F3)
 					viewed=2;
 //printf("term: %d\n", viewed);
+				if (active_terminal != viewed){
 				save_this_terminal(active_terminal, viewed, stdin);
 				switchterm(viewed);
-				
+				}
 			}
 			
 
