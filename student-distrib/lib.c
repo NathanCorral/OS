@@ -88,6 +88,15 @@ void switchterm(int newterm){
 		memcpy(vidbuff[activeterm], video_mem, KB4); //save video memory
 		memcpy(video_mem, vidbuff[newterm], KB4); //show new memory
 		setactiveterm(newterm);
+		int run= getrunning(activeterm);
+		// printf("active: %x\n", activeterm);
+		// printf("running: %x\n", run);
+		if(run==0){
+			clear();
+			execute("shell");
+		}
+
+
 	}
 }
 

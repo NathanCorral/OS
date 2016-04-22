@@ -11,6 +11,7 @@ uint32_t kstackbottom;
 uint8_t running= 0;
 uint8_t current=0;
 uint32_t pdaddr;
+int run[3];
 
 //this does nothing
 int32_t emptyfunc(){
@@ -139,7 +140,7 @@ int openprocess;
 		entrypoint |= (buf[i] << i*(maxfd+1)); //set entrypoint
 		
 	}
-
+int	terminal=getactiveterm();
 //set up paging
 	
 	if( newtask(openprocess)==-1)
@@ -162,9 +163,10 @@ int openprocess;
 
 
 //check if 0th open process
-	if( running ==MASK){
+	if( run[terminal]<1){
 		pcb->parent_process= -1;
-		pcb->term=0;
+	
+		pcb->term=terminal;
 	}
 	// else if(running== MASK<<1){
 	// 	pcb->parent_process=0;
@@ -174,7 +176,7 @@ int openprocess;
 		((pcb_t *)((uint32_t)&esp & PCBALIGN))->haschild=1;
 		pcb->term=((pcb_t *)((uint32_t)&esp & PCBALIGN))->term;
 	}
-
+run[terminal]++;
 	pcb->process= openprocess; 
 
 //save args
@@ -213,7 +215,8 @@ asm volatile ("haltreturn:");
 //intputs the status
 //halts the program and goes back to previous process
 int32_t halt(int8_t status){
-	
+	int	terminal=getactiveterm();
+	run[terminal]--;
 	int i;
 	uint8_t buf[4];
 	pcb_t * pcb= (pcb_t *)(kstackbottom &PCBALIGN);
@@ -221,6 +224,7 @@ int32_t halt(int8_t status){
 	//don't want to close final shell, so restart it just to be sure
 
 	if (pcb->parent_process==-1){
+		run[terminal]++;
 		if(fsread((const int8_t *)("shell"), ENTRYPT, buf, 4)==-1)
 			return -1;
 		uint32_t entrypoint;
@@ -480,19 +484,19 @@ int32_t getargs (uint8_t* buf, int32_t nbytes){
 int32_t vidmap (uint8_t ** screen_start){
 	if((uint32_t) screen_start < VIRT128 || (uint32_t) screen_start > VIRT128+ksize )
 		return -1;
-// pcb_t * pcb= (pcb_t *)(kstackbottom &PCBALIGN);
-// uint32_t theterm= pcb->term;
+pcb_t * pcb= (pcb_t *)(kstackbottom &PCBALIGN);
+uint32_t theterm= pcb->term;
 
-// if (theterm==0)
+if (theterm==0)
  *screen_start= (uint8_t *) kb; //sets to user accessible video memory
 
-// else if (theterm==1)
-// 	*screen_start= (uint8_t *) VIDBUF1; //0
+else if (theterm==1)
+	*screen_start= (uint8_t *) (3*kb); //0
 
-// else if (theterm==2)
-// 	*screen_start= (uint8_t *) VIDBUF2;
-// else
-// 	*screen_start= (uint8_t *) VIDBUF0;
+else if (theterm==2)
+	*screen_start= (uint8_t *) (5*kb);
+else
+	*screen_start= (uint8_t *) kb;
 	return 0;
 }
 
@@ -515,7 +519,7 @@ int startup(){
 // 		entrypoint |= (buf[i] << i*(maxfd+1)); //set entrypoint
 		
 // 	}
-
+// printf("reached 1\n");
 //     for(i=3; i>0; i--) {
 // 	if( newtask(i)==-1)
 // 		return -1;
@@ -544,7 +548,7 @@ int startup(){
 // 		pcb->fdescs->inuse=0;
 // 		pcb->fdescs->inode=0;
 // 	}
-
+// printf("reached 2\n");
 
 
 // tss.esp0= MB8-KB8*i-4; //need openprocess number
@@ -555,12 +559,20 @@ int startup(){
 // 	 open((uint8_t *) "stdin");
 // 	 open((uint8_t *) "stdout");
 // 	}
-// running |= 0x70;
+// 	printf("reached 3\n");
 
+
+// memcpy((char *) VIDBUF0, (char *)VIDEO, KB4);
+// 	memcpy((char *) VIDBUF1, (char *)VIDEO, KB4);
+// 	memcpy((char *) VIDBUF2, (char *)VIDEO, KB4);
+// running |= 0x70;
+// printf("reached 4\n");
 // 	 asm volatile("movl %%esp, %0":"=g"(pcb->espsave));
 // 	 sti();
 // 	gotouser(entrypoint);
-
+// 	uint32_t temp;
+// 	temp = ((pcb_t *)((uint32_t)&temp & PCBALIGN))->savestatus;
+// 	return  temp;
 // 	return 0;
 	execute("shell");
 	// switchterm(1);
@@ -568,10 +580,117 @@ int startup(){
 	// switchterm(2);
 	// execute("shell");
 	// switchterm(0);
-	// memcpy((char *) VIDBUF0, (char *)VIDEO, KB4);
-	// memcpy((char *) VIDBUF1, (char *)VIDEO, KB4);
-	// memcpy((char *) VIDBUF2, (char *)VIDEO, KB4);
-return 0;
+	return 0;
+
+// 	uint8_t buf[4];
+
+// 	uint32_t entrypoint;
+// 	uint8_t exnumbers[4]= {0x7F, 0x45, 0x4C, 0x46};
+
+// 	uint8_t argbuf[tablesize];
+// 	int i;
+
+
+
+// pcb_t * pcb;
+// 	entrypoint=0;
+// 	int k;
+
+
+	
+// //printf ("parsed\n");
+
+
+
+// 	if(fsread("shell", 0, (uint8_t *)buf, 4) == -1){ // Checks for executable image
+// 		return -1;
+// 	}
+
+// 	if(strncmp((int8_t *)buf, (int8_t *)exnumbers, 4))
+// 		return -1;
+
+
+// //look for open spot in process
+
+
+
+
+// //read to get entrypoint
+// 	if(fsread("shell", ENTRYPT, (uint8_t *)buf, 4)==-1)
+// 		return -1;
+
+// 	for(i=0; i<4; i++){
+// 		//buf[i]= buf[i] & 0xFF;
+		
+// 		entrypoint |= (buf[i] << i*(maxfd+1)); //set entrypoint
+		
+// 	}
+
+// //set up paging
+// 	for(k=3; k>0; k--){
+// 	if( newtask(k)==-1)
+// 		return -1;
+
+// 	fstomem("shell", PROGADDR);
+
+// 	pcb= (pcb_t*)(MB8-KB8*(k+1)); //get pcb
+
+
+// //save ebp, esp, ss
+// 	uint32_t esp;
+	
+// 	pcb->kernel_sp=tss.esp0;
+
+// 	uint32_t ebp;
+// 	asm volatile("movl %%ebp, %0":"=g"(ebp));
+// 	pcb->kernel_bp=ebp;
+// 	pcb->kernel_ss=tss.ss0;
+
+
+// //check if 0th open process
+
+// 		pcb->parent_process= -1;
+// 		pcb->haschild=0;
+// 		pcb->term=k;
+	
+// 	// else if(running== MASK<<1){
+// 	// 	pcb->parent_process=0;
+// 	// }
+	
+
+// 	pcb->process= k; 
+
+// //save args
+// 	strcpy(pcb->argsave, (int8_t *)argbuf);
+
+// //clear file descs
+// 	for (i=0; i<maxfd+1; i++){
+// 		pcb->fdescs->position=0;
+// 		pcb->fdescs->inuse=0;
+// 		pcb->fdescs->inode=0;
+// 	}
+
+// 	//set tss
+
+// 	tss.esp0= MB8-KB8*k-4; //need openprocess number
+// 	tss.ss0=KERNEL_DS;
+// 	kstackbottom=tss.esp0;
+
+// 	//open stdin, stdout
+// 	 open((uint8_t *) "stdin");
+// 	 open((uint8_t *) "stdout");
+
+// }
+// 	 asm volatile("movl %%esp, %0":"=g"(pcb->espsave));
+// 	gotouser(entrypoint);
+
+
+	
+// 	uint32_t temp;
+// 	temp = ((pcb_t *)((uint32_t)&temp & PCBALIGN))->savestatus;
+// 	return  temp;
+	
+
 }
 
 
@@ -585,4 +704,6 @@ int32_t sigreturn (void){
 	return 0;
 }
 
-
+int getrunning(int term){
+	return run[term];
+}

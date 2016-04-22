@@ -142,8 +142,10 @@ dir[0].pagedir[1]=kpage;
 
 }
 
+
 //create the new page table system for the intputted process
 //returns -1 if fail, 0 if success
+
 int32_t newtask( uint8_t process){
 
 uint32_t i;
@@ -160,9 +162,20 @@ int tr=0;
 int tp=0;
 int tflags=0;
 
+int terminal= getactiveterm();
+//printf("active: %d", terminal);
+int index;
+
+if(terminal==0)
+	index=1;
+else if (terminal==1)
+	index=3;
+else if (terminal==2)
+	index=5;
+//printf("index: %d", index);
 //make new table
-newpagedir=(uint32_t)(&dir[process]);
-for(i=0; i<tablesize; i++){
+newpagedir=(uint32_t)(&dir[process]); //set up directory for process
+for(i=0; i<tablesize; i++){ //set up table for process
 	if(i==0)
 		tp=0;
 	else
@@ -176,11 +189,15 @@ for(i=0; i<tablesize; i++){
 	tflags= (tp | (tr << readshift) | (tu << useshift) |(tw << writetshift) | (tc << cacheshift) | (ta <<accessshift) | (td <<dirtyshift) | (tg << globalshift));
 
 newtable[i]= i* kb;
-if (i==useridx){ //set to video memory
+if (i==index){ //set to video memory
 newtable[i]= video;	
 }
 newtable[i] |= tflags;
 }
+
+// printf("1: %x", newtable[1]);
+// printf("3: %x", newtable[3]);
+// printf("5: %x", newtable[5]);
 
 //set table into directory
 int dg=0;
@@ -200,7 +217,7 @@ du=1;
 
 dflags=(dp | (dr << readshift) | (du << useshift) |(dw << writetshift) | (dd << cacheshift) | (da <<accessshift) | (ds <<sizeshift) | (dg << globalshift));
 
-dir[process].pagedir[0]= (uint32_t)newtable;
+dir[process].pagedir[0]= (uint32_t)newtable; //set up dir for process
 dir[process].pagedir[0] |= dflags;
 
 
@@ -215,7 +232,7 @@ dg=1;
 dflags=(dp | (dr << readshift) | (du << useshift) |(dw << writetshift) | (dd << cacheshift) | (da <<accessshift) | (ds <<sizeshift) | (dg << globalshift));
 
 
-kpage= ksize;
+kpage= ksize; //put in kernal page
 kpage |= dflags;
 dir[process].pagedir[1]=kpage;
 
@@ -229,11 +246,9 @@ dg=0;
 
 dflags=(dp | (dr << readshift) | (du << useshift) |(dw << writetshift) | (dd << cacheshift) | (da <<accessshift) | (ds <<sizeshift) | (dg << globalshift));
 
-dir[process].pagedir[progimg]= (process+2)*ksize;
+dir[process].pagedir[progimg]= (process+2)*ksize; //where in the memory it goes
 dir[process].pagedir[progimg] |= dflags;
 
-
-//set paging registers
 
 asm volatile ("				\
 		movl %0, %%cr3 \n\
@@ -252,6 +267,7 @@ asm volatile ("				\
 }
 
 //returns address of directory of process
+
 uint32_t getaddr(uint8_t process){
 	return (uint32_t) &dir[process];
 }

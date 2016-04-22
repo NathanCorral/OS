@@ -200,8 +200,12 @@ void keyboard_handle(){
 					viewed=1;
 				else if (key==F3)
 					viewed=2;
+				else
+					break;
 //printf("term: %d\n", viewed);
 				if (active_terminal != viewed){
+					spin_unlock(lock);
+					send_eoi(1);
 				save_this_terminal(active_terminal, viewed, stdin);
 				switchterm(viewed);
 				}
@@ -276,12 +280,12 @@ static uint8_t keyshiftchar [64]={
   int savex=0;
   int savey=0;
 char buffer[128];
-//char readbuffer[128];
+
 // static uint8_t altset=0; //for later
 int i=0;
 int cursor=0;
 
-//this will all have to change to deal with the buffer
+
 
 void keyboardopen(){
 	int j=0;
@@ -324,6 +328,12 @@ while(j<nbytes){
 	buf[j]='\0';
 	j++;
 }
+<<<<<<< .mine
+// for(j=0; j<nbytes; j++){
+// 	putc(buf[j]);
+// }
+=======
+>>>>>>> .r15870
 
 return bytesread;
 }
@@ -360,7 +370,7 @@ updatecursor(cursor);
 	 else if (key==RELEASE(LEFTCTRL))
 	 	ctrlset=0;
 
-if (i>=128){ 
+if (i>=127){ 
 	if(key == ENTER || (ctrlset==1 && key== LKEY)){ //wait for enter
 
 	i=0;
@@ -401,7 +411,7 @@ else{
 			
 			 int x=getx(); //get coordinates
 			 int y= gety();
-			 if(x==0 && y==0);
+			 if((x==0 && y==0) || (x==0 && i==0));
 			 else
 				x--; //go back
 
