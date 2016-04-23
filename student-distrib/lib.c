@@ -126,6 +126,7 @@ void switchterm(int newterm){
 
 		tss.ss0= savess0[newterm];
 		tss.esp0=saveesp0[newterm];
+		setkstack(tss.esp0);
 		
 		asm volatile ("movl %0, %%ebp     ;"
 		"movl %1, %%esp     ;"
@@ -462,7 +463,7 @@ putc(uint8_t c)
         // screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
     }
 
-    if(screen_x== (NUM_COLS-1) || screen_x==NUM_COLS){
+    if(screen_x==NUM_COLS){
     	screen_x=0;
     	if(screen_y==NUM_ROWS-1)
     		scroll();
