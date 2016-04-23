@@ -206,8 +206,11 @@ void keyboard_handle(){
 				if (active_terminal != viewed){
 					spin_unlock(lock);
 					send_eoi(1);
+					sti();
 				save_this_terminal(active_terminal, viewed, stdin);
 				switchterm(viewed);
+			//	return;
+				//some kind of iret
 				}
 			}
 			

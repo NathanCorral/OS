@@ -19,6 +19,11 @@ static int activeterm=0;
 static int processingterm=0;
 
 static char * vidbuff[3]={(char *) VIDBUF0, (char *) VIDBUF1, (char *) VIDBUF2};
+ uint32_t saveesp[3];
+ uint32_t saveebp[3];
+ uint32_t savess0[3];
+ uint32_t paddrsave[3];
+ uint32_t saveesp0[3];
 /*
 * void clear(void);
 *   Inputs: void
@@ -84,6 +89,15 @@ void setactiveterm(int term){
 }
 
 void switchterm(int newterm){
+	//save all
+	asm volatile("movl %%esp, %0":"=g"(saveesp[activeterm]));
+	saveesp0[activeterm]=tss.esp0;
+	asm volatile("movl %%ebp, %0":"=g"(saveebp[activeterm]));
+	savess0[activeterm]= tss.ss0;
+	asm volatile("movl %%cr3, %0":"=g"(paddrsave[activeterm]));
+	
+
+
 	if(newterm>=0 && newterm<3){
 		memcpy(vidbuff[activeterm], video_mem, KB4); //save video memory
 		memcpy(video_mem, vidbuff[newterm], KB4); //show new memory
@@ -96,6 +110,33 @@ void switchterm(int newterm){
 			execute("shell");
 		}
 
+
+		asm volatile ("				\
+		movl %0, %%cr3 \n\
+		movl %%cr4, %%eax	\n\
+		orl $0x90, %%eax	\n\
+		movl %%eax, %%cr4	\n\
+		movl %%cr0, %%eax \n\
+		orl $0x80000000, %%eax	\n\
+		movl %%eax, %%cr0"
+		:
+		:"r" (paddrsave[newterm])
+		:"%eax"
+		);
+
+		tss.ss0= savess0[newterm];
+		tss.esp0=saveesp0[newterm];
+		
+		asm volatile ("movl %0, %%ebp     ;"
+		"movl %1, %%esp     ;"
+		::"g"(saveebp[newterm]), "g"(saveesp[newterm]));
+
+// asm volatile ("movl %0, %%esp     ;"
+// 		"iret   ;"
+// 		::"g"((uint32_t)saved));
+		
+		//restore
+return;
 
 	}
 }

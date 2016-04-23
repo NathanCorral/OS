@@ -4,10 +4,12 @@
 
 
 .global keyboard_wrapper
+//.global saved
 .align 4
-
+saved:
+.long 0
 keyboard_wrapper:
-
+//movl %esp, saved
 pushl %eax
 pushl %ebx
 pushl %ecx
