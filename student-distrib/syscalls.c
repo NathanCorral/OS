@@ -202,18 +202,18 @@ run[terminal]++;
 
 
 	 asm volatile("movl %%esp, %0":"=g"(pcb->espsave));
-int flag=0;
+// int flag=0;
 	 if(run[1]==0)
 	 	switchterm(1);
 	 if(run[2]==0){
 	 	switchterm(2);
 	 	//switchterm(0);
-	 	flag=1;
+	 	//flag=1;
 	 }
-	 if(flag){
-	 	flag=0;
-	 	switchterm(0);
-	 }
+	 // if(flag){
+	 // 	flag=0;
+	 // 	switchterm(0);
+	 // }
 	gotouser(entrypoint);
 asm volatile ("haltreturn:");
 
