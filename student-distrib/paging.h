@@ -40,6 +40,7 @@ typedef struct dir_t {
 	int pagedir[tablesize];
 
 } dir_t;
+void remap();
 extern uint32_t getaddr(uint8_t process);
 extern void pageenable();
 extern void pageinit();

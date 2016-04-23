@@ -2,7 +2,8 @@
 #include "paging.h"
 #include "lib.h"
 #include "types.h"
-
+#include "syscalls.h"
+#include "lib.h"
 
 
 #define progimg 0x20
@@ -270,6 +271,114 @@ asm volatile ("				\
 
 uint32_t getaddr(uint8_t process){
 	return (uint32_t) &dir[process];
+}
+void remap(){
+	uint8_t running = nowrunning();
+	uint8_t bitmask = 0x80;
+	int i;
+	pcb_t * pcb;
+	uint32_t active = getactiveterm();
+
+	for(i=0; i<8; i++){
+		if(bitmask &running){
+			pcb= (pcb_t *) (MB8-KB8*(i+1));
+			if(pcb->term==active){
+				//set to b8000
+				int index;
+
+				if(active==0)
+					index=1;
+				else if (active==1)
+					index=3;
+				else if (active==2)
+					index=5;
+				int tg=0;
+	int td=0;
+	int ta=0;
+	int tc=0;
+	int tw=0;
+	int tu=0;
+	int tr=0;
+	int tp=0;
+	int tflags=0;
+	tr=1;
+	tu=1;
+	tg=1;
+
+
+	tflags= (tp | (tr << readshift) | (tu << useshift) |(tw << writetshift) | (tc << cacheshift) | (ta <<accessshift) | (td <<dirtyshift) | (tg << globalshift));
+//set to video memory
+
+	uint32_t * newp;
+	newp=(uint32_t * )((dir[(int)pcb->process].pagedir[0])& 0xFFFFF000);
+	newp[1]= 0xB9000;
+	newp[3]= 0xBA000;
+	newp[5]= 0xBB000;
+	newp[index]= video;	
+
+	newp[index] |= tflags;
+
+	newp[viddiv]= video;
+	newp[viddiv] |= tflags;
+	//memcpy((uint32_t *) video,(uint32_t *) newp[index], KB4);
+			}
+			
+
+
+
+
+
+
+
+
+
+			else{
+				//set to pcb->term* x1000 + xb5000
+				int index;
+
+				if(pcb->term==0)
+					index=1;
+				else if (pcb->term==1)
+					index=3;
+				else if (pcb->term==2)
+					index=5;
+				int tg=0;
+	int td=0;
+	int ta=0;
+	int tc=0;
+	int tw=0;
+	int tu=0;
+	int tr=0;
+	int tp=0;
+	int tflags=0;
+	tr=1;
+	tu=1;
+	tg=1;
+
+
+	tflags= (tp | (tr << readshift) | (tu << useshift) |(tw << writetshift) | (tc << cacheshift) | (ta <<accessshift) | (td <<dirtyshift) | (tg << globalshift));
+//set to video memory
+
+	uint32_t  * newp;
+	newp=(uint32_t * )((dir[(int)pcb->process].pagedir[0])& 0xFFFFF000);
+newp[1]= 0xB9000;
+	newp[3]= 0xBA000;
+	newp[5]= 0xBB000;
+
+	uint32_t writescreen = (uint32_t)(0x1000*(pcb->term)+0xB9000);
+
+
+	newp[index]= writescreen;	
+
+	newp[index] |= tflags;
+
+	newp[viddiv]= writescreen;
+	newp[viddiv] |= tflags;
+			}
+		}
+		bitmask= bitmask >>1;
+	}
+
 }
 
 

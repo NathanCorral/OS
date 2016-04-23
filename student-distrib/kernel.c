@@ -18,6 +18,8 @@
  #include "terminal.h"
  #include "files.h"
  #include "syscalls.h"
+ #include "pitirq.h"
+ #include "pit.h"
 
 
 
@@ -202,6 +204,7 @@ interruptinit(); //initialize interrupts
 	terminal_init();
 	keyboard_open();
 	terminal_open();
+	pit_init();
 	enable_irq(2);
 	sti();
 	

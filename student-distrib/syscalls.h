@@ -15,6 +15,8 @@
 #define PROGADDR 0x08048000
 #define PCBALIGN 0xFFFFE000
 #define VIRT128  0x08000000
+#define MB8 0x800000
+#define KB8 0x2000
 
 
 typedef struct fops {
@@ -48,6 +50,8 @@ typedef struct pcb_t{
 	int32_t savestatus;
 	uint32_t term;
 	uint32_t haschild;
+	uint32_t oldesp; // Points to the top of the kernel stack
+	uint32_t oldebp;
 }pcb_t;
 
 // function to execute user code
@@ -61,4 +65,14 @@ int32_t read(int32_t fd, void *buf, int32_t nbytes);
 int32_t write(int32_t fd, void *buf, int32_t nbytes);
 int startup();
 int getrunning(int term);
+int nowrunning();
+
+uint8_t getcurrent();
+
+void setcurrent(uint8_t set );
+
+uint32_t getkstack();
+
+void setkstack(uint32_t set);
+void setpdaddr(uint32_t set);
 #endif

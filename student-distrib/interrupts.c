@@ -11,6 +11,7 @@
 #include "rtcirq.h"
 #include "syscalls.h"
 #include "syscallhandle.h"
+#include "pitirq.h"
 
 void interruptinit(){
 	int i;
@@ -80,9 +81,10 @@ for(i=0x20; i<0x2F; i++){
     idt[i].reserved3 = 1;
     idt[i].reserved4 = 0;
     idt[i].seg_selector = KERNEL_CS; 
-	SET_IDT_ENTRY(idt[0x80], syscall);
+	//SET_IDT_ENTRY(idt[0x80], syscall);
 
 	// Link interupt handlers.
+	SET_IDT_ENTRY(idt[0x20],pit_wrapper);
 	SET_IDT_ENTRY(idt[33],keyboard_wrapper);
 	SET_IDT_ENTRY(idt[40],rtc_wrapper);
 	SET_IDT_ENTRY(idt[0x80], syscallhandle);

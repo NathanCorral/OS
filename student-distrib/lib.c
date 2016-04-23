@@ -130,15 +130,59 @@ void switchterm(int newterm){
 		asm volatile ("movl %0, %%ebp     ;"
 		"movl %1, %%esp     ;"
 		::"g"(saveebp[newterm]), "g"(saveesp[newterm]));
+//remap();
+	}
 
 // asm volatile ("movl %0, %%esp     ;"
 // 		"iret   ;"
 // 		::"g"((uint32_t)saved));
 		
 		//restore
+
+	// asm volatile("movl %%esp, %0":"=g"(saveesp[activeterm]));
+	// saveesp0[activeterm]=tss.esp0;
+	// asm volatile("movl %%ebp, %0":"=g"(saveebp[activeterm]));
+	// savess0[activeterm]= tss.ss0;
+	// asm volatile("movl %%cr3, %0":"=g"(paddrsave[activeterm]));
+	// if(newterm>=0 && newterm<3){
+	//  memcpy(vidbuff[activeterm], video_mem, KB4); //save video memory
+	// 	memcpy(video_mem, vidbuff[newterm], KB4); //show new memory
+
+	// setactiveterm(newterm);
+
+	//  	int run= getrunning(activeterm);
+
+	// 	if(run==0){
+	// 		clear();
+	// 		execute("shell");
+	// 	}		
+	// 				asm volatile ("				\
+	// 	movl %0, %%cr3 \n\
+	// 	movl %%cr4, %%eax	\n\
+	// 	orl $0x90, %%eax	\n\
+	// 	movl %%eax, %%cr4	\n\
+	// 	movl %%cr0, %%eax \n\
+	// 	orl $0x80000000, %%eax	\n\
+	// 	movl %%eax, %%cr0"
+	// 	:
+	// 	:"r" (paddrsave[newterm])
+	// 	:"%eax"
+	// 	);
+
+	// 	tss.ss0= savess0[newterm];
+	// 	tss.esp0=saveesp0[newterm];
+		
+	// 	asm volatile ("movl %0, %%ebp     ;"
+	// 	"movl %1, %%esp     ;"
+	// 	::"g"(saveebp[newterm]), "g"(saveesp[newterm]));
+	// 	//printf("got here");
+	// 	//remap();
+
+	
+	// }
 return;
 
-	}
+	
 }
 
 uint32_t getactiveterm(){

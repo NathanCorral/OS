@@ -2,9 +2,9 @@
 
 
 #define maxfd 7
-#define MB8 0x800000
+
 #define EMPTYMASK 0x7F
-#define KB8 0x2000
+
 #define MASK 0x80
 #define NameSize 32
 uint32_t kstackbottom;
@@ -167,6 +167,7 @@ int	terminal=getactiveterm();
 		pcb->parent_process= -1;
 	
 		pcb->term=terminal;
+		pcb->haschild=0;
 	}
 	// else if(running== MASK<<1){
 	// 	pcb->parent_process=0;
@@ -201,6 +202,18 @@ run[terminal]++;
 
 
 	 asm volatile("movl %%esp, %0":"=g"(pcb->espsave));
+int flag=0;
+	 if(run[1]==0)
+	 	switchterm(1);
+	 if(run[2]==0){
+	 	switchterm(2);
+	 	//switchterm(0);
+	 	flag=1;
+	 }
+	 if(flag){
+	 	flag=0;
+	 	switchterm(0);
+	 }
 	gotouser(entrypoint);
 asm volatile ("haltreturn:");
 
@@ -706,4 +719,28 @@ int32_t sigreturn (void){
 
 int getrunning(int term){
 	return run[term];
+}
+
+int nowrunning(){
+	return running;
+}
+
+uint8_t getcurrent(){
+ return current;
+}
+
+void setcurrent(uint8_t set ){
+current=set;
+}
+
+uint32_t getkstack(){
+	return kstackbottom;
+}
+
+void setkstack(uint32_t set){
+	kstackbottom=set;
+}
+
+void setpdaddr(uint32_t set){
+	pdaddr=set;
 }

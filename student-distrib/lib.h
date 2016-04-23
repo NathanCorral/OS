@@ -16,9 +16,9 @@
 #define NUM_ROWS 25
 #define ATTRIB 0x7
  #define KB4 0x1000
- #define VIDBUF0 0x2000
- #define VIDBUF1 0x4000
- #define VIDBUF2 0x6000
+ #define VIDBUF0 0xB9000
+ #define VIDBUF1 0xBA000
+ #define VIDBUF2 0xBB000
 
 int32_t printf(int8_t *format, ...);
 void putc(uint8_t c);

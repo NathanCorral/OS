@@ -1,7 +1,10 @@
 #include "rtc.h"
+
 int count = 0;
 int interrupt = 0;  // Checks if an interrupt has occurred
 void rtc_handle(){
+	
+
 	// NOTE::: delete cli/ sti after we make a common handler
 	cli();
 	//printf("%d in rtc \n", count++);
