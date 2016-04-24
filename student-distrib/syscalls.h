@@ -52,6 +52,8 @@ typedef struct pcb_t{
 	uint32_t haschild;
 	uint32_t oldesp; // Points to the top of the kernel stack
 	uint32_t oldebp;
+	uint32_t oldesp0;
+	uint32_t oldss0;
 }pcb_t;
 
 // function to execute user code

@@ -181,6 +181,7 @@ interruptinit(); //initialize interrupts
 	
 //fsopen( module->mod_start, module->mod_end );
 	pageinit();
+	 pageenable();
 
 
 

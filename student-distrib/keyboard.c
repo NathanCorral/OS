@@ -84,6 +84,7 @@ int32_t keyboard_read(void* buf, int32_t nbytes){
 		// Wait for new input
 		while(buf_empty(stdin[active_terminal]));
 
+
 		c = get_char(active_terminal, stdin);
 		((char *) buf)[bytesread++] = c;
 		if(c == '\n'){
@@ -93,6 +94,16 @@ int32_t keyboard_read(void* buf, int32_t nbytes){
 		// Get rid of backspace and input before
 		else if(c == BACKSPACE)
 			bytesread-=2;
+
+		if(bytesread==126){
+			if(buf_full(stdin[active_terminal]))
+				buf_decidx(stdin[active_terminal].end);
+
+			//stdin[active_terminal][buf_incidx(end)] = '\n';
+			write_char(active_terminal, stdin, '\n');
+			terminal_input('\n');
+			terminal_enter();
+		}
 	}
 	return bytesread;
 }
@@ -173,6 +184,7 @@ void keyboard_handle(){
 
 		// Now that we have handled all special inputs
 		default :
+
 
 			if(key >= ALLRELEASE)
 				break;  // Release key

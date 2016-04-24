@@ -173,6 +173,8 @@ else if (terminal==1)
 	index=3;
 else if (terminal==2)
 	index=5;
+
+index=1;
 //printf("index: %d", index);
 //make new table
 newpagedir=(uint32_t)(&dir[process]); //set up directory for process
@@ -378,6 +380,7 @@ newp[1]= 0xB9000;
 		}
 		bitmask= bitmask >>1;
 	}
+	return;
 
 }
 

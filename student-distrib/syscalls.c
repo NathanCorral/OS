@@ -500,17 +500,17 @@ int32_t vidmap (uint8_t ** screen_start){
 pcb_t * pcb= (pcb_t *)(kstackbottom &PCBALIGN);
 uint32_t theterm= pcb->term;
 
-if (theterm==0)
+// if (theterm==0)
  *screen_start= (uint8_t *) kb; //sets to user accessible video memory
 
-else if (theterm==1)
-	*screen_start= (uint8_t *) (3*kb); //0
+// else if (theterm==1)
+// 	*screen_start= (uint8_t *) (3*kb); //0
 
-else if (theterm==2)
-	*screen_start= (uint8_t *) (5*kb);
-else
-	*screen_start= (uint8_t *) kb;
-	return 0;
+// else if (theterm==2)
+// 	*screen_start= (uint8_t *) (5*kb);
+// else
+// 	*screen_start= (uint8_t *) kb;
+// 	return 0;
 }
 
 int startup(){

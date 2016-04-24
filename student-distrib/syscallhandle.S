@@ -35,7 +35,17 @@ end:
 	movl %eax, returnval
 
 	popal
+
 	movl returnval, %eax
+
+	popl %ebx
+	popl %ecx
+	popl %edx
+	andl $0xFFFFFFEF,%edx
+	pushl %edx
+	pushl %ecx
+	pushl %ebx
+
 	iret
 
 

@@ -91,7 +91,7 @@ void terminal_backspace(){
 void terminal_enter(){
 	// possible use for later
 	//printf("Terminal enter\n");
-	int i;
+	//int i;
 	//for(i=0; i<100000000; i++);
 	putc(' ');
 	back_space();
