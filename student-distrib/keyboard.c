@@ -67,16 +67,16 @@ char getc(){
 }
 
 void put_char_buff(char c, int term) {
-	return;
+	// printf("placing %c in %d",c,term);
     if(c == '\n' || c == '\r') {
     	if(stdin[term].y== NUM_ROWS-1){ //if last line, scroll
-    		scroll();
+    		scroll_buff(term);
     	}
     	else
         stdin[term].y++;
         stdin[term].x=0;
     } else {
-    	uint32_t addr = get_vid_buf_addr();
+    	uint32_t addr = get_vid_buf_addr(term);
 		*(uint8_t *)(addr + ((NUM_COLS*(stdin[term].y) + stdin[term].x) << 1)) = c;
 	    *(uint8_t *)(addr + ((NUM_COLS*stdin[term].y + stdin[term].x) << 1) + 1) = ATTRIB;
 	    stdin[term].x++;
@@ -88,14 +88,31 @@ void put_char_buff(char c, int term) {
     if(stdin[term].x==NUM_COLS){
     	stdin[term].x=0;
     	if(stdin[term].y==NUM_ROWS-1)
-    		scroll();
+    		scroll_buff(term);
     	else
     		stdin[term].y++;
     }
     if(stdin[term].y==NUM_ROWS-1 && stdin[term].x==NUM_COLS){ //if on last line and get to end of line, scroll
-    	scroll();
+    	scroll_buff(term);
     	stdin[term].x=0;
     }
+}
+
+void scroll_buff(term) {
+	int x, y;
+	uint32_t addr = get_vid_buf_addr(term);
+	for(y=0; y<NUM_ROWS-1; y++){
+		for(x=0; x<NUM_COLS; x++){
+		//move each row up
+		*(uint8_t *)(addr+ ((NUM_COLS*y+x)<<1))=*(uint8_t *)(addr+ ((NUM_COLS*(y+1)+x)<<1));
+		}
+	}
+	//clear out last line
+	for(x=0; x<NUM_COLS; x++){
+		*(uint8_t *)(addr+ ((NUM_COLS*(NUM_ROWS-1)+x)<<1))= 0;
+	}
+	stdin[term].x = 0;
+	stdin[term].y = NUM_ROWS-1;
 }
 
 int32_t keyboard_open(){

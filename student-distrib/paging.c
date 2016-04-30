@@ -186,6 +186,7 @@ void remap_video(pcb_t * pcb, uint32_t addr) {
 	table_t * vid_tab = (table_t *) (pcb->dir->table->table[0] & ADDR_ENTRY);
 	vid_tab->table[VIDDIV] = addr;
 	vid_tab->table[VIDDIV] |= (SET_P) | (SET_R);
+	page_set(pcb->dir);
 }
 
 

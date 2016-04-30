@@ -33,7 +33,7 @@ void back_space();
 void scroll();
 void scroll_up();
 void help_debug();
-uint32_t get_vid_buf_addr();
+uint32_t get_vid_buf_addr(int term);
 
 void* memset(void* s, int32_t c, uint32_t n);
 void* memset_word(void* s, int32_t c, uint32_t n);

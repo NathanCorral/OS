@@ -12,6 +12,9 @@ int32_t terminal_close();
 int32_t terminal_read(const int8_t *fname, uint32_t offset, uint8_t * buf, uint32_t nbytes);
 int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes);
 
+void set_c();
+int get_c();
+
 void terminal_input(char key_input);
 
 void terminal_backspace();

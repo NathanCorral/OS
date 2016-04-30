@@ -21,7 +21,7 @@ syscallhandle:
 	jl invalid
 	cmpl $10, %eax 
 	jg invalid
-	cli
+	#cli
 
 	movl sysjump(, %eax,4), %eax
 	call *%eax
@@ -31,7 +31,7 @@ invalid:
 	movl $-1, %eax
 
 end:
-	sti
+	#sti
 	addl $12, %esp #pop args
 	movl %eax, returnval
 

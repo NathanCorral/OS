@@ -62,7 +62,7 @@ void switch_to(pcb_t * pcb) {
 		// running_process->kernel_ss=tss.ss0;
 		// Remap user video memory
 		if(running_process->term != terminal)
-			remap_user_video(running_process, get_vid_buf_addr());
+			remap_user_video(running_process, get_vid_buf_addr(running_process->term));
 	}
 	// Set video mem on new process
 	if(pcb->term == terminal){
@@ -308,6 +308,7 @@ int32_t execute(const int8_t * cmd){
 	//open stdin, stdout
 	 open((uint8_t *) "stdin");
 	 open((uint8_t *) "stdout");
+	 set_c();
 
 
 	
@@ -332,10 +333,13 @@ int32_t halt(int8_t status){
 	int i;
 	uint8_t buf[4];
 	pcb_t * pcb = running_process;
+	if(pcb->parent_process != NULL)
+		printf("c:  %d  Halt %s num %d go to %s num %d\n",get_c(), pcb->temp, pcb->process, pcb->parent_process->temp, pcb->parent_process->process);
 
 	//don't want to close final shell, so restart it just to be sure
 
 	if (pcb->parent_process==NULL){
+		sti();
 		running_process = NULL;
 		execute("shell");
 		if(fsread((const int8_t *)("shell"), ENTRYPT, buf, 4)==-1){
@@ -345,7 +349,6 @@ int32_t halt(int8_t status){
 		for(i=0; i<4; i++){
 			entrypoint |= (buf[i] << i*8);
 		}
-		sti();
 		gotouser(entrypoint);
 	}
 
@@ -385,7 +388,9 @@ int32_t halt(int8_t status){
 
 	//pcb->savestatus= status;
 	savestatus = status;
-
+	// switch_to(pcb->parent_process);
+	// sti();
+	// asm volatile ("jmp haltreturn ;");
 	
 	running_process = pcb->parent_process;
 	running_process->child = NULL;
@@ -394,11 +399,11 @@ int32_t halt(int8_t status){
 	tss.esp0= running_process->kernel_sp; 
 	tss.ss0= running_process->kernel_ss;
 //go bacck to execute
+	sti();
 	asm volatile ("movl %0, %%ebp     ;"
 				"movl %1, %%esp     ;"
 				"jmp haltreturn ;"
 				::"g"(running_process->kernel_bp), "g"(running_process->espsave));
-	sti();
 	return 0;
 
 }

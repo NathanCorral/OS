@@ -93,8 +93,8 @@ clear_re(void)
     }
 }
 
-uint32_t get_vid_buf_addr() {
-	return (uint32_t) vidbuff[activeterm];
+uint32_t get_vid_buf_addr(int term) {
+	return (uint32_t) vidbuff[term];
 }
 
 void back_space(){
@@ -157,40 +157,8 @@ void switchterm(int newterm){
 		}
 		pcb_t * pcb = get_prog(activeterm);
 		switch_to(pcb);
-		return;
-//remap();
-
-		asm volatile ("				\
-		movl %0, %%cr3 \n\
-		movl %%cr4, %%eax	\n\
-		orl $0x90, %%eax	\n\
-		movl %%eax, %%cr4	\n\
-		movl %%cr0, %%eax \n\
-		orl $0x80000000, %%eax	\n\
-		movl %%eax, %%cr0"
-		:
-		:"r" (paddrsave[newterm])
-		:"%eax"
-		);
-
-		tss.ss0= savess0[newterm];
-		tss.esp0=saveesp0[newterm];
-		setkstack(tss.esp0);
-		
-		asm volatile ("movl %0, %%ebp     ;"
-		"movl %1, %%esp     ;"
-		::"g"(saveebp[newterm]), "g"(saveesp[newterm]));
 
 	}
-
-// asm volatile ("movl %0, %%esp     ;"
-// 		"iret   ;"
-// 		::"g"((uint32_t)saved));
-
-
-
-	
-	// }
 return;
 
 	
@@ -582,6 +550,8 @@ putc(uint8_t c)
     if(c == '\n' || c == '\r') {
     	if(screen_y== NUM_ROWS-1){ //if last line, scroll
     		scroll();
+   //  		screen_x = 0;
+			// screen_y = NUM_ROWS-1;
     	}
     	else
         screen_y++;
@@ -597,14 +567,18 @@ putc(uint8_t c)
 
     if(screen_x==NUM_COLS){
     	screen_x=0;
-    	if(screen_y==NUM_ROWS-1)
+    	if(screen_y==NUM_ROWS-1){
     		scroll();
+   //  		screen_x = 0;
+			// screen_y = NUM_ROWS-1;
+    	}
     	else
     		screen_y++;
     }
     if(screen_y==NUM_ROWS-1 && screen_x==NUM_COLS){ //if on last line and get to end of line, scroll
     	scroll();
-    	screen_x=0;
+  //   	screen_x = 0;
+		// screen_y = NUM_ROWS-1;
     }
     update_terminal(screen_x, screen_y);
 	updatecursor(0);

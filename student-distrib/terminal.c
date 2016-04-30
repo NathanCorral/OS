@@ -44,16 +44,36 @@ int32_t terminal_close(){
 int32_t terminal_read(const int8_t *fname, uint32_t offset, uint8_t * buf, uint32_t nbytes){
 	return keyboard_read(buf, nbytes);
 }
-
+int c = 0;
+void set_c() {
+	c = 0;
+}
+int get_c() {
+	return c;
+}
 int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes){
 	int i;
 	pcb_t * pcb = get_prog(-1);
-	int term = getactiveterm();
-	if(buf == NULL)
+	// printf("Terminal Write\n");
+	int term;
+	if(buf == NULL){
+		// printf("NULL BUFF\n");
 		return -1;
+	}
+	// printf("k ");
+	// back_space();
+	// back_space();
+	c++;
+	//putc(((char *)buf)[0]);
+	// printf("Got a input\n");
 	for(i=0; i<nbytes; i++){
-		if((pcb != NULL) && (pcb->term != term)) {
-			put_char_buff(((char *) buf)[i], term);
+		if((pcb != NULL) && (pcb->term != (term = getactiveterm()))) {
+			// remap_user_video(pcb, get_vid_buf_addr(pcb->term));
+			// putc(((char *) buf)[i]);
+			// remap_user_video(pcb, VIDEO);
+			// printf("k");
+			// back_space();
+			put_char_buff(((char *) buf)[i], pcb->term);
 		}
 		else{
 			putc(((char *) buf)[i]);
