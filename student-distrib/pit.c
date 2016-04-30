@@ -39,8 +39,8 @@ void pit_handle(){
 
 
 	send_eoi(0);
-	help_debug();
-	// switch_to(NULL);
+	// help_debug();
+	switch_to(NULL);
 	//sti();
 	return;
 

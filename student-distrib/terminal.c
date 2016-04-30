@@ -47,10 +47,17 @@ int32_t terminal_read(const int8_t *fname, uint32_t offset, uint8_t * buf, uint3
 
 int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes){
 	int i;
+	pcb_t * pcb = get_prog(-1);
+	int term = getactiveterm();
 	if(buf == NULL)
 		return -1;
 	for(i=0; i<nbytes; i++){
-		putc(((char *) buf)[i]);
+		if((pcb != NULL) && (pcb->term != term)) {
+			put_char_buff(((char *) buf)[i], term);
+		}
+		else{
+			putc(((char *) buf)[i]);
+		}
 	}
 
 

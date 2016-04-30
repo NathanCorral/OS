@@ -49,8 +49,8 @@ void switch_to(pcb_t * pcb) {
 			pcb = pcb->child;
 		}
 	}
-	printf("\nSwitching from %s num %d\n", running_process->temp, running_process->process);
-	printf("To %s num %d\n", pcb->temp, pcb->process);
+	// printf("\nSwitching from %s num %d\n", running_process->temp, running_process->process);
+	// printf("To %s num %d\n", pcb->temp, pcb->process);
 	int terminal = getactiveterm();
 	if(pcb == running_process)
 		return;
