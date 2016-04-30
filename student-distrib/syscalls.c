@@ -333,8 +333,8 @@ int32_t halt(int8_t status){
 	int i;
 	uint8_t buf[4];
 	pcb_t * pcb = running_process;
-	if(pcb->parent_process != NULL)
-		printf("c:  %d  Halt %s num %d go to %s num %d\n",get_c(), pcb->temp, pcb->process, pcb->parent_process->temp, pcb->parent_process->process);
+	// if(pcb->parent_process != NULL)
+	// 	printf("c:  %d  Halt %s num %d go to %s num %d\n",get_c(), pcb->temp, pcb->process, pcb->parent_process->temp, pcb->parent_process->process);
 
 	//don't want to close final shell, so restart it just to be sure
 
