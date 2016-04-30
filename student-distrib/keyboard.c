@@ -69,7 +69,14 @@ char getc(){
 }
 
 void put_char_buff(char c, int term) {
-	// printf("placing %c in %d",c,term);
+	// printf("placing char in %d\n",term);
+	// int x1,x2;
+	// int y1,y2;
+	// x1 = stdin[1].x;
+	// y1 = stdin[1].y;
+	// x2 = stdin[2].x;
+	// y2 = stdin[2].y;
+
     if(c == '\n' || c == '\r') {
     	if(stdin[term].y== NUM_ROWS-1){ //if last line, scroll
     		scroll_buff(term);
@@ -98,6 +105,12 @@ void put_char_buff(char c, int term) {
     	scroll_buff(term);
     	stdin[term].x=0;
     }
+
+ //    stdin[1].x = x1;
+	// stdin[1].y = y1;
+	// stdin[2].x = x2;
+	// stdin[2].y = y2;
+
 }
 
 void scroll_buff(term) {
@@ -149,8 +162,15 @@ int32_t keyboard_read(void* buf, int32_t nbytes){
 			break;	
 		}
 		// Get rid of backspace and input before
-		else if(c == BACKSPACE)
-			bytesread-=2;
+		else if(c == BACKSPACE){
+			if(bytesread < 2) {
+				bytesread--;
+			}
+			else{
+				bytesread-=2;
+				terminal_backspace();
+			}
+		}
 
 		if(bytesread==126){
 			if(buf_full(stdin[active_terminal]))
@@ -216,14 +236,17 @@ void keyboard_handle(){
 
 		case BACKSPACE :
 		//stdin[buf_incidx(end)]= '\0';
-			if(!buf_empty(stdin[active_terminal])){
+			// if(buf_empty(stdin[active_terminal])) {
+			// 	break;
+			// }
+			// if(!buf_empty(stdin[active_terminal])){
 
-				buf_decidx(stdin[active_terminal].end);
-			}
+			// 	buf_decidx(stdin[active_terminal].end);
+			// }
 
 			//stdin[active_terminal][buf_incidx(end)] = BACKSPACE;
 			write_char(active_terminal, stdin, BACKSPACE);
-			terminal_backspace();
+			// terminal_backspace();
 			break;
 
 		case ENTER :
@@ -273,7 +296,7 @@ void keyboard_handle(){
 					spin_unlock(lock);
 					send_eoi(1);
 					sti();
-					printf("Switching\n");
+					// printf("Switching\n");
 					switch_to(NULL);
 					return;
 				}

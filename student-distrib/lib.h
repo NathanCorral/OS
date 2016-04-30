@@ -16,6 +16,9 @@
  #define VIDBUF1 0xBA000
  #define VIDBUF2 0xBB000
 
+
+ void set_key_write(int term);
+
 int32_t printf(int8_t *format, ...);
 void putc(uint8_t c);
 int32_t puts(int8_t *s);

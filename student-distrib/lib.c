@@ -48,11 +48,11 @@ void help_debug() {
 	x = screen_x;
 	y = screen_y;
 	screen_y = 20;
-	screen_x = 47;
+	screen_x = 44;
 	pcb_t * pcb = get_prog(-1);
 	if(pcb == NULL)
 		return;
-	printf("Term %d Run %s num %d\n", activeterm, pcb->temp, pcb->process);
+	printf("Term %d Run %s num %d term %d\n", activeterm, pcb->temp, pcb->process, pcb->term);
 	num_process = 1;
 	pcb_t * cur = pcb->next;
 	while(cur != pcb) {
@@ -538,6 +538,10 @@ puts(int8_t* s)
 *   Return Value: void
 *	Function: Output a character to the console 
 */
+// int key_write = -1;
+// void set_key_write(int term) {
+// 	key_write = term;
+// }
 
 void
 putc(uint8_t c)
@@ -547,6 +551,10 @@ putc(uint8_t c)
 	// 	put_char_buff(c, pcb->term);
  //    	return;
 	// }
+	// if(key_write != activeterm) {
+	// 	return;
+	// }
+
     if(c == '\n' || c == '\r') {
     	if(screen_y== NUM_ROWS-1){ //if last line, scroll
     		scroll();

@@ -41,7 +41,7 @@ int32_t terminal_close(){
 	return 0;
 }
 
-int32_t terminal_read(const int8_t *fname, uint32_t offset, uint8_t * buf, uint32_t nbytes){
+int32_t terminal_read(const int8_t *fname, uint32_t offset, uint8_t * buf, uint32_t nbytes) {
 	return keyboard_read(buf, nbytes);
 }
 int c = 0;
@@ -51,11 +51,14 @@ void set_c() {
 int get_c() {
 	return c;
 }
-int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes){
+int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
+	// sti();
 	int i;
 	pcb_t * pcb = get_prog(-1);
+	// set_key_write(pcb->term);
+
 	// printf("Terminal Write\n");
-	int term;
+	// int term;
 	if(buf == NULL){
 		// printf("NULL BUFF\n");
 		return -1;
@@ -67,7 +70,7 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes){
 	//putc(((char *)buf)[0]);
 	// printf("Got a input\n");
 	for(i=0; i<nbytes; i++){
-		if((pcb != NULL) && (pcb->term != (term = getactiveterm()))) {
+		if(pcb->term !=  getactiveterm()) {
 			// remap_user_video(pcb, get_vid_buf_addr(pcb->term));
 			// putc(((char *) buf)[i]);
 			// remap_user_video(pcb, VIDEO);
@@ -75,12 +78,12 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes){
 			// back_space();
 			put_char_buff(((char *) buf)[i], pcb->term);
 		}
-		else{
+		else {
 			putc(((char *) buf)[i]);
+			// printf("k ");
 		}
 	}
-
-
+	// cli();
 	return nbytes;
 }
 
