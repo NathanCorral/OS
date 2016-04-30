@@ -6,11 +6,7 @@
 #define _LIB_H
 
 #include "types.h"
-#include "terminal.h"
- #include "syscalls.h"
- #include "syscallhandle.h"
- #include "paging.h"
- #include "keyboardirq.h"
+
  #define VIDEO 0xB8000
 #define NUM_COLS 80
 #define NUM_ROWS 25
@@ -36,6 +32,8 @@ void update_screen(int x, int y);
 void back_space();
 void scroll();
 void scroll_up();
+void help_debug();
+uint32_t get_vid_buf_addr();
 
 void* memset(void* s, int32_t c, uint32_t n);
 void* memset_word(void* s, int32_t c, uint32_t n);

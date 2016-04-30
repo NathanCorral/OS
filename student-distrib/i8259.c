@@ -63,7 +63,7 @@ int i;
 void
 enable_irq(uint32_t irq_num)
 {
-
+	printf("Enable IRQ %d\n", irq_num);
 	unsigned char mask;
 	uint16_t port;
 #ifdef DEBUG_PIC
@@ -75,6 +75,7 @@ enable_irq(uint32_t irq_num)
 		mask = inb(port);
 		//change mask
 		mask=mask & ~(1 << irq_num);
+		//mask=mask & ~(1);
 		//send mask
 		outb(mask , port);
 	}
@@ -91,9 +92,9 @@ enable_irq(uint32_t irq_num)
 	
 #ifdef DEBUG_PIC
 	for(i=0; i<10000; i++); // wait a sec before we check
-		i = inb(port);
-		if(i & (irq_num << 1) != 0)
-			printf("Failed to enable irq \n");
+	i = inb(port);
+	if(i & (1 << irq_num) != 0)
+		printf("Failed to enable irq \n");
 #endif
 
 	

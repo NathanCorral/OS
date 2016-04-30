@@ -181,7 +181,7 @@ interruptinit(); //initialize interrupts
 	
 //fsopen( module->mod_start, module->mod_end );
 	pageinit();
-	 pageenable();
+	//pageenable();
 
 
 
@@ -200,15 +200,19 @@ interruptinit(); //initialize interrupts
 
 	// Initilize Drivers
 	cli();
+	pit_init();
 	rtc_init(); //initialize rtc
 	keyboard_init();
 	terminal_init();
-	keyboard_open();
-	terminal_open();
-	pit_init();
 	enable_irq(2);
 	sti();
+
+
 	
+	
+	keyboard_open();
+	terminal_open();
+	programs_init();
 	// for (x=0; x<128; x++)
 	// printf("%c", string[x]);
 
@@ -230,8 +234,8 @@ interruptinit(); //initialize interrupts
 	//while(1);
 
 
-	//test_mp3_2();
-	 startup();
+	test_mp3_2();
+	//startup();
 
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");

@@ -1,4 +1,9 @@
+
 #include "keyboard.h"
+#include "terminal.h"
+#include "spinlock.h"
+#include "i8259.h"
+#include "syscalls.h"
 
 #define RELEASE(key) (key |0x80)
 
@@ -59,6 +64,38 @@ char getc(){
 	char c;
 	c = get_char(active_terminal, stdin);
 	return c;
+}
+
+void put_char_buff(char c, int term) {
+	return;
+    if(c == '\n' || c == '\r') {
+    	if(stdin[term].y== NUM_ROWS-1){ //if last line, scroll
+    		scroll();
+    	}
+    	else
+        stdin[term].y++;
+        stdin[term].x=0;
+    } else {
+    	uint32_t addr = get_vid_buf_addr();
+		*(uint8_t *)(addr + ((NUM_COLS*(stdin[term].y) + stdin[term].x) << 1)) = c;
+	    *(uint8_t *)(addr + ((NUM_COLS*stdin[term].y + stdin[term].x) << 1) + 1) = ATTRIB;
+	    stdin[term].x++;
+       
+        // screen_x %= NUM_COLS;
+        // screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
+    }
+
+    if(stdin[term].x==NUM_COLS){
+    	stdin[term].x=0;
+    	if(stdin[term].y==NUM_ROWS-1)
+    		scroll();
+    	else
+    		stdin[term].y++;
+    }
+    if(stdin[term].y==NUM_ROWS-1 && stdin[term].x==NUM_COLS){ //if on last line and get to end of line, scroll
+    	scroll();
+    	stdin[term].x=0;
+    }
 }
 
 int32_t keyboard_open(){
@@ -178,7 +215,7 @@ void keyboard_handle(){
 			//stdin[active_terminal][buf_incidx(end)] = '\n';
 			write_char(active_terminal, stdin, '\n');
 			terminal_input('\n');
-			terminal_enter();
+			//terminal_enter();
 			//start = end;
 			break;
 
@@ -212,6 +249,14 @@ void keyboard_handle(){
 					viewed=1;
 				else if (key==F3)
 					viewed=2;
+				else if (key_input == 'c') {
+					spin_unlock(lock);
+					send_eoi(1);
+					sti();
+					printf("Switching\n");
+					switch_to(NULL);
+					return;
+				}
 				else
 					break;
 //printf("term: %d\n", viewed);

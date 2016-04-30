@@ -3,6 +3,13 @@
  */
 
 #include "lib.h"
+#include "terminal.h"
+#include "syscalls.h"
+#include "syscallhandle.h"
+#include "paging.h"
+#include "keyboardirq.h"
+#include "x86_desc.h"
+ #include "keyboard.h"
 
  // 0xFA0 is 4000 Bytes, the size of video memory
 #define VIDEO_SIZE 0x0FA0 - ((NUM_COLS)*(NUM_ROWS) << 1) // (4 kB - space to store one screen)
@@ -31,6 +38,35 @@ static char * vidbuff[3]={(char *) VIDBUF0, (char *) VIDBUF1, (char *) VIDBUF2};
 *	Function: Clears video memory
 */
 
+// Prints some debug info at the bottem of the screen
+// Prints number of processes running
+// prints name and number of active process running
+// prints active terminal
+void help_debug() {
+
+	int x,y, num_process = 0;
+	x = screen_x;
+	y = screen_y;
+	screen_y = 20;
+	screen_x = 47;
+	pcb_t * pcb = get_prog(-1);
+	if(pcb == NULL)
+		return;
+	printf("Term %d Run %s num %d\n", activeterm, pcb->temp, pcb->process);
+	num_process = 1;
+	pcb_t * cur = pcb->next;
+	while(cur != pcb) {
+		num_process++;
+		cur = cur->next;
+	}
+	screen_x = 47;
+	printf("P: %d\n", num_process);
+	screen_x = x;
+	screen_y = y;
+	updatecursor(0);
+	//pcb_t * pcb = get_process(&num_process);
+}
+
 void
 clear(void)
 {
@@ -55,6 +91,10 @@ clear_re(void)
         *(uint8_t *)(video_mem + (i << 1)) = ' ';
        *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
     }
+}
+
+uint32_t get_vid_buf_addr() {
+	return (uint32_t) vidbuff[activeterm];
 }
 
 void back_space(){
@@ -90,11 +130,11 @@ void setactiveterm(int term){
 
 void switchterm(int newterm){
 	//save all
-	asm volatile("movl %%esp, %0":"=g"(saveesp[activeterm]));
-	saveesp0[activeterm]=tss.esp0;
-	asm volatile("movl %%ebp, %0":"=g"(saveebp[activeterm]));
-	savess0[activeterm]= tss.ss0;
-	asm volatile("movl %%cr3, %0":"=g"(paddrsave[activeterm]));
+	// asm volatile("movl %%esp, %0":"=g"(saveesp[activeterm]));
+	// saveesp0[activeterm]=tss.esp0;
+	// asm volatile("movl %%ebp, %0":"=g"(saveebp[activeterm]));
+	// savess0[activeterm]= tss.ss0;
+	// asm volatile("movl %%cr3, %0":"=g"(paddrsave[activeterm]));
 	
 
 
@@ -115,6 +155,9 @@ void switchterm(int newterm){
 			clear();
 			execute("shell");
 		}
+		pcb_t * pcb = get_prog(activeterm);
+		switch_to(pcb);
+		return;
 //remap();
 
 		asm volatile ("				\
@@ -143,8 +186,7 @@ void switchterm(int newterm){
 // asm volatile ("movl %0, %%esp     ;"
 // 		"iret   ;"
 // 		::"g"((uint32_t)saved));
-		
-		//restore
+
 
 
 	
@@ -153,6 +195,122 @@ return;
 
 	
 }
+
+// void switchterm(int newterm, int pk){
+	
+// 	//save all
+
+// 	int now= nowrunning();
+// 	if(now==0){
+// 		return;
+// 	}
+
+
+// int temp;
+// 	pcb_t * pcb;
+// 	pcb = ((pcb_t *)((uint32_t)&temp & PCBALIGN));
+
+// 	asm volatile("movl %%esp, %0":"=g"(pcb->oldesp));
+// 	pcb->oldesp0=tss.esp0;
+// 	asm volatile("movl %%ebp, %0":"=g"(pcb->oldebp));
+// 	pcb->oldss0= tss.ss0;
+// 	// asm volatile("movl %%cr3, %%eax;"
+// 	// 	"movl %%eax, %0;":"=g"(pcb->oldpage)::"%eax");
+
+	
+// int run= getrunning(newterm);
+
+
+// 	if((newterm>=0 && newterm<3)&&(pk>=0 && pk<=2)){
+// //runningterm=newterm;
+// 		if(pk==0 || pk==2){
+// 		memcpy(vidbuff[activeterm], video_mem, KB4); //save video memory
+// 		memcpy(video_mem, vidbuff[newterm], KB4); //show new memory
+
+// 		//mapback(pcb->process);
+		
+// 		setactiveterm(newterm);
+// 		// remap();
+
+		
+
+		
+// 		// printf("active: %x\n", activeterm);
+// 		// printf("running: %x\n", run);
+
+// 		if(run==0){
+			
+// 			clear();
+// 			//update_screen(0,0);
+// 			//update_terminal(0,0);
+// 			execute("shell");
+// 		}
+
+
+
+// 		}
+	
+// 	if(run==0)
+// 		return;
+
+// // 	uint8_t running=nowrunning();
+// // 	uint8_t current=getcurrent();
+
+// // 	uint8_t next= (current+1)%8;
+// // 	uint8_t bitmask= 0x80;
+// // 	int i;
+// // 	pcb_t * pcbt;
+
+// // 	for(i=0; i<next; i++){
+// // 		bitmask=bitmask >>1;
+// // 	}
+
+// // 	while(current != next){
+
+// // 		if(bitmask &running){
+// // 			pcbt= (pcb_t *) (MB8-KB8*(next+1));
+
+// // 			if(pcb->haschild==0)
+// // 				break;
+// // 		}
+// // 		next= (next+1)%8;
+// // 		bitmask= bitmask >>1;
+// // 		if (bitmask==0)
+// // 			bitmask= 0x80;
+// // 	}
+
+// // 	if(current== next)
+// // 		return;
+
+// // pcbt= (pcb_t *)(MB8-KB8*(next+1));
+
+// //need new pcb
+
+// uint32_t paddr=getaddr(pcb->process);
+// //mapforward(pcb->process);
+// 		asm volatile ("				\
+// 		movl %0, %%cr3 \n\
+// 		movl %%cr4, %%eax	\n\
+// 		orl $0x90, %%eax	\n\
+// 		movl %%eax, %%cr4	\n\
+// 		movl %%cr0, %%eax \n\
+// 		orl $0x80000000, %%eax	\n\
+// 		movl %%eax, %%cr0"
+// 		:
+// 		:"r" (paddr)
+// 		:"%eax"
+// 		);
+
+// 		tss.ss0= pcb->oldss0;
+// 		tss.esp0=pcb->oldesp0;
+// 		setkstack(tss.esp0);
+		
+// 		asm volatile ("movl %0, %%ebp     ;"
+// 		"movl %1, %%esp     ;"
+// 		::"g"(pcb->oldebp), "g"(pcb->oldesp));
+
+// 	}
+// }
 
 uint32_t getactiveterm(){
 	return activeterm;
@@ -416,6 +574,11 @@ puts(int8_t* s)
 void
 putc(uint8_t c)
 {
+	// pcb_t * pcb = get_prog(-1);
+	// if((pcb != NULL) && (pcb->term != activeterm)) {
+	// 	put_char_buff(c, pcb->term);
+ //    	return;
+	// }
     if(c == '\n' || c == '\r') {
     	if(screen_y== NUM_ROWS-1){ //if last line, scroll
     		scroll();
@@ -424,9 +587,10 @@ putc(uint8_t c)
         screen_y++;
         screen_x=0;
     } else {
-        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = c;
+		*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = c;
         *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = ATTRIB;
         screen_x++;
+       
         // screen_x %= NUM_COLS;
         // screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
     }

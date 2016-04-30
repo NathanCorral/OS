@@ -1,10 +1,6 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
-#include "terminal.h"
-#include "spinlock.h"
-#include "i8259.h"
-
 #define LEFTCTRL 0x1D
 #define LEFTALT 0x38
 #define LEFTSHIFT 0x2A
@@ -31,6 +27,17 @@
 
 #define BUF_SIZE 128
 
+#include "types.h"
+
+typedef struct buf_t buf_t;
+
+struct buf_t {
+	int start;
+	int end;
+	int x;
+	int y;
+	uint8_t buf[BUF_SIZE];
+};
 
 extern char getc();
 
@@ -40,18 +47,8 @@ extern void keyboard_init();
 extern int32_t keyboard_open();
 extern int32_t keyboard_close();
 
-typedef struct buf_t {
-	uint8_t buf[BUF_SIZE];
-	int start;
-	int end;
-	int x;
-	int y;
-}buf_t;
-
-
-
-
 int32_t keyboard_read(void* buf, int32_t nbytes);
+void put_char_buff(char c, int term);
 
 int32_t keyboard_write(const void *buf, int32_t nbytes);
 //extern int32_t keyboardclose();

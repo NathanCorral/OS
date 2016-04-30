@@ -1,5 +1,11 @@
 
 #include "terminal.h"
+#include "lib.h"
+#include "spinlock.h"
+#include "keyboard.h"
+#include "x86_desc.h"
+#include "syscalls.h"
+#include "paging.h"
 
 int x, y, handle_inputs;
 
@@ -46,6 +52,8 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes){
 	for(i=0; i<nbytes; i++){
 		putc(((char *) buf)[i]);
 	}
+
+
 	return nbytes;
 }
 
@@ -76,6 +84,7 @@ void terminal_input(char key_input){
 	// handle_inputs will be ignored during user programs and output
 	// once we finish
 	if(echo_input){
+		//while(1);
 		putc(key_input);
 	}
 	// Save for later

@@ -1,5 +1,7 @@
 
 #include "pit.h"
+#include "x86_desc.h"
+#include "lib.h"
 
  void pit_init(){
  	outb(MODE3, CMRP);
@@ -8,9 +10,39 @@
  	enable_irq(0);
  }
 
+// void pit_handle(){
+// 	cli();
+// 	send_eoi(0);
+
+// //int old=active;
+// active++;
+// if (active==3)
+// 	active=0;
+// // if(newarray[active]==0){
+// // 	save_this_terminal( old ,active, stdin);
+// // 	switchterm(active, 0);}
+// // //if(newarray[active])
+// // else{
+	
+// // }
+//  if(newarray[active]==1)
+// switchterm(active, 1);
+// }
+
 void pit_handle(){
-	// cli();
+	cli();
+	// if(temp != tss.eip){
+	// 	temp = tss.eip;
+	// 	printf("EIP 0x%#x\n", temp);
+	// }
+	// printf("EIP 0x%#x\n", tss.eip);
+
+
 	send_eoi(0);
+	help_debug();
+	// switch_to(NULL);
+	//sti();
+	return;
 
 	// uint8_t running=nowrunning();
 	// uint8_t current=getcurrent();
@@ -26,8 +58,7 @@ void pit_handle(){
 	// }
 
 	// while(current != next){
-
-	// 	if(bitmask &running){
+	// 	if(bitmask &running ){
 	// 		pcb= (pcb_t *) (MB8-KB8*(next+1));
 
 	// 		if(pcb->haschild==0)
@@ -41,13 +72,15 @@ void pit_handle(){
 
 	// if(current== next)
 	// 	return;
+
+	// // printf("Current = 0x%#x,  next = %#x\n",current, next);
+
 	// pcb= (pcb_t *) (MB8-KB8*(current+1));
 
 	// asm volatile("movl %%esp, %0":"=g"(pcb->oldesp));
 	// pcb->oldesp0=tss.esp0;
 	// asm volatile("movl %%ebp, %0":"=g"(pcb->oldebp));
 	// pcb->oldss0=tss.ss0;
-
 	// current=next;
 	// setcurrent(current);
 
@@ -68,17 +101,16 @@ void pit_handle(){
 	// 	:"r" (pdaddr)
 	// 	:"%eax"
 	// 	);
-
-	// //tss.esp0= MB8-KB8*(next+1)-4;
+	// return;
+	// tss.esp0= MB8-KB8*(next+1)-4;
 	// tss.ss0=pcb->oldss0;
 	// tss.esp0= pcb->oldesp0;
 	// setkstack(tss.esp0);
 
 	
-
 	// asm volatile ("movl %0, %%ebp     ;"
 	// 	"movl %1, %%esp     ;"
 	// 	::"g"(pcb->oldebp), "g"(pcb->oldesp));
-	return;
+	// return;
 }
 
