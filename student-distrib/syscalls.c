@@ -41,6 +41,7 @@ void programs_init() {
 
 
 void switch_to(pcb_t * pcb) {
+	cli();
 	if(running_process == NULL)
 		return;
 	if(pcb == NULL) {
@@ -77,6 +78,7 @@ void switch_to(pcb_t * pcb) {
 	asm volatile ("movl %0, %%ebp     ;"
 				"movl %1, %%esp     ;"
 				::"g"(running_process->kernel_bp), "g"(running_process->espsave));
+	sti();
 	return;
 }
 
@@ -238,12 +240,14 @@ int32_t execute(const int8_t * cmd){
 	// Set running process
 	if(run[terminal]<1) {
 		pcb->parent_process = NULL;
+		pcb->term = terminal;
 
 	}
 	else {
 		if(running_process->term == terminal) {
 			pcb->parent_process = running_process;
 			running_process->child = pcb;
+			pcb->term = terminal;
 		}
 		else {
 			pcb->parent_process = NULL;
@@ -259,7 +263,7 @@ int32_t execute(const int8_t * cmd){
 		pcb->next = pcb;
 	}
 
-	pcb->term = terminal;
+	
 	pcb->child = NULL;
 	running_process = pcb;
 	run[terminal]++;
@@ -328,11 +332,10 @@ asm volatile ("haltreturn:");
 //halts the program and goes back to previous process
 int32_t halt(int8_t status){
 	cli();
-	int	terminal=getactiveterm();
-	run[terminal]--;
 	int i;
 	uint8_t buf[4];
 	pcb_t * pcb = running_process;
+	run[pcb->term]--;
 	// if(pcb->parent_process != NULL)
 	// 	printf("c:  %d  Halt %s num %d go to %s num %d\n",get_c(), pcb->temp, pcb->process, pcb->parent_process->temp, pcb->parent_process->process);
 

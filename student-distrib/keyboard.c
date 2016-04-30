@@ -52,6 +52,8 @@ void keyboard_init(){
 	for(i=0; i<3; i++) {
 		stdin[i].start = 0;
 		stdin[i].end = 0;
+		stdin[i].x = 0;
+		stdin[i].y = 0;
 	}
 	enable_irq(1);
 }
@@ -128,7 +130,8 @@ int32_t keyboard_close(){
 int32_t keyboard_read(void* buf, int32_t nbytes){
 	int bytesread=0;
 	char c;
-	uint32_t active_terminal = getactiveterm();
+	pcb_t * pcb = get_prog(-1);
+	uint32_t active_terminal = pcb->term;
 
 	if(buf == NULL || nbytes < 0)
 		return -1;	
@@ -278,14 +281,16 @@ void keyboard_handle(){
 					break;
 //printf("term: %d\n", viewed);
 				if (active_terminal != viewed){
+					//printf("Switching Terminal\n");
 					spin_unlock(lock);
 					send_eoi(1);
 					sti();
-				save_this_terminal(active_terminal, viewed, stdin);
-				switchterm(viewed);
+					save_this_terminal(active_terminal, viewed, stdin);
+					switchterm(viewed);
 			//	return;
 				//some kind of iret
-				}
+			}
+		
 			}
 			
 
