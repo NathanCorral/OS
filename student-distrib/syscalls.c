@@ -312,7 +312,7 @@ int32_t execute(const int8_t * cmd){
 	//open stdin, stdout
 	 open((uint8_t *) "stdin");
 	 open((uint8_t *) "stdout");
-	 set_c();
+	 // set_c();
 
 
 	

@@ -63,7 +63,7 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes){
 	// printf("k ");
 	// back_space();
 	// back_space();
-	c++;
+	// c++;
 	//putc(((char *)buf)[0]);
 	// printf("Got a input\n");
 	for(i=0; i<nbytes; i++){
