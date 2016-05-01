@@ -21,13 +21,13 @@ void terminal_init(){
 
 
 int32_t terminal_open(){
-	x = 0;
-	y = 0;
-	clear();
-	echo_input = 1;
-	handle_inputs = 0;
-	update_screen(x, y);
-	keyboard_open();
+	// x = 0;
+	// y = 0;
+	// clear();
+	// echo_input = 1;
+	// handle_inputs = 0;
+	// update_screen(x, y);
+	// keyboard_open();
 	return 0;
 }
 
@@ -69,20 +69,25 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
 	// c++;
 	//putc(((char *)buf)[0]);
 	// printf("Got a input\n");
+	// int temp=0;
 	for(i=0; i<nbytes; i++){
-		if(pcb->term !=  getactiveterm()) {
+		put_char_buff(((char *) buf)[i], pcb->term);
+		if(pcb->term ==  getactiveterm()) {
 			// remap_user_video(pcb, get_vid_buf_addr(pcb->term));
 			// putc(((char *) buf)[i]);
 			// remap_user_video(pcb, VIDEO);
 			// printf("k");
 			// back_space();
-			put_char_buff(((char *) buf)[i], pcb->term);
-		}
-		else {
 			putc(((char *) buf)[i]);
-			// printf("k ");
+			// putc('k');
 		}
+		// else {
+		// 	putc(((char *) buf)[i]);
+		// 	// temp++;
+		// }
 	}
+	// if(temp != 0)
+	// 	printf("Wrote %d\n", temp);
 	// cli();
 	return nbytes;
 }
@@ -113,9 +118,11 @@ void terminal_ctr(char command){
 void terminal_input(char key_input){
 	// handle_inputs will be ignored during user programs and output
 	// once we finish
+	putc(key_input);
+	put_char_buff(key_input, getactiveterm());
 	if(echo_input){
 		//while(1);
-		putc(key_input);
+		
 	}
 	// Save for later
 	else
@@ -123,7 +130,7 @@ void terminal_input(char key_input){
 }
 
 void terminal_backspace(){
-	if(echo_input)
+	// if(echo_input)
 		back_space();
 }
 
@@ -132,8 +139,8 @@ void terminal_enter(){
 	//printf("Terminal enter\n");
 	//int i;
 	//for(i=0; i<100000000; i++);
-	putc(' ');
-	back_space();
+	// putc(' ');
+	// back_space();
 	//printf("end\n");
 }
 
@@ -144,8 +151,8 @@ void update_terminal(screen_x, screen_y){
 
 void save_this_terminal(uint32_t active_terminal, int viewed, void * stdin) {
 	buf_t * st = (buf_t *) stdin;
-	st[active_terminal].x = x;
-	st[active_terminal].y = y;
+	// st[active_terminal].x = x;
+	// st[active_terminal].y = y;
 	x = st[viewed].x;
 	// if(x<80-2) //something odd, maybe fixed by not 
 	// 	x++;
@@ -154,7 +161,7 @@ void save_this_terminal(uint32_t active_terminal, int viewed, void * stdin) {
 	//putc(' ');
 	// back_space();
 	
-	updatecursor(0);
+	// updatecursor(0);
 }
 
 // Unused.  May be repurposed for shell

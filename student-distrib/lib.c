@@ -53,6 +53,15 @@ void help_debug() {
 	if(pcb == NULL)
 		return;
 	printf("Term %d Run %s num %d term %d\n", activeterm, pcb->temp, pcb->process, pcb->term);
+	screen_y = 21;
+	screen_x = 44;
+	printf("Screen x %d,  Screen y %d\n",x,y);
+	screen_y = 22;
+	screen_x = 44;
+	// update_buffer(activeterm, x, y);
+	print_keyboard_info();
+	screen_y = 23;
+	screen_x = 44;
 	num_process = 1;
 	pcb_t * cur = pcb->next;
 	while(cur != pcb) {
@@ -63,8 +72,25 @@ void help_debug() {
 	printf("P: %d\n", num_process);
 	screen_x = x;
 	screen_y = y;
+	// update_buffer(activeterm, x, y);
 	updatecursor(0);
 	//pcb_t * pcb = get_process(&num_process);
+}
+
+void init_mem() {
+    int32_t i, term;
+    scrolled = 0;
+    screen_x = 0;
+    screen_y = 0;
+    clear();
+    uint32_t addr;
+    for(term=0; term<3; term++){
+    	addr = get_vid_buf_addr(term);
+    	for(i=0; i<NUM_ROWS*NUM_COLS; i++) {
+	        *(uint8_t *)(addr + (i << 1)) = ' ';
+	       *(uint8_t *)(addr + (i << 1) + 1) = ATTRIB;
+	    }
+    }
 }
 
 void
@@ -72,6 +98,9 @@ clear(void)
 {
     int32_t i;
     scrolled = 0;
+    screen_x = 0;
+    screen_y = 0;
+    // update_buffer(activeterm, screen_x, screen_y);
 
     for(i=0; i<NUM_ROWS*NUM_COLS; i++) {
         *(uint8_t *)(video_mem + (i << 1)) = ' ';
@@ -140,10 +169,9 @@ void switchterm(int newterm){
 
 	if(newterm>=0 && newterm<3){
 
-
-		memcpy(vidbuff[activeterm], video_mem, KB4); //save video memory
+		cli();
+		// memcpy(vidbuff[activeterm], video_mem, KB4); //save video memory
 		memcpy(video_mem, vidbuff[newterm], KB4); //show new memory
-
 	
 		setactiveterm(newterm);
 
@@ -153,9 +181,12 @@ void switchterm(int newterm){
 		// printf("running: %x\n", run);
 		if(run==0){
 			clear();
+			sti();
 			execute("shell");
+			return;
 		}
 		pcb_t * pcb = get_prog(activeterm);
+		sti();
 		switch_to(pcb);
 
 	}
@@ -407,7 +438,6 @@ printf(int8_t *format, ...)
 {
 	/* Pointer to the format string */
 	int8_t* buf = format;
-
 	/* Stack pointer for the other parameters */
 	int32_t* esp = (void *)&format;
 	esp++;
@@ -509,7 +539,6 @@ format_char_switch:
 		}
 		buf++;
 	}
-
 	return (buf - format);
 }
 
@@ -588,7 +617,9 @@ putc(uint8_t c)
   //   	screen_x = 0;
 		// screen_y = NUM_ROWS-1;
     }
+    // put_char_buff(c, activeterm);
     update_terminal(screen_x, screen_y);
+    // update_buffer(activeterm, screen_x, screen_y);
 	updatecursor(0);
 }
 

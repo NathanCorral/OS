@@ -46,8 +46,12 @@ extern void keyboardopen();
 extern void keyboard_init();
 extern int32_t keyboard_open();
 extern int32_t keyboard_close();
+void set_temp();
+void reset_temp();
 
 int32_t keyboard_read(void* buf, int32_t nbytes);
+void print_keyboard_info();
+void update_buffer(int term, int x, int y);
 void put_char_buff(char c, int term);
 void scroll_buff(term);
 

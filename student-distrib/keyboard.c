@@ -46,6 +46,24 @@ static uint8_t shiftset=0;
 static uint8_t capset=0;
 static uint8_t altset = 0;
 
+void print_keyboard_info() {
+	printf(" 0:(%d, %d); 1:(%d, %d); 2:(%d, %d)", stdin[0].x,stdin[0].y,stdin[1].x,stdin[1].y,stdin[2].x,stdin[2].y);
+}
+int temp=1;
+void set_temp() {
+	temp = 1;
+}
+void reset_temp() {
+	temp = 0;
+}
+
+void update_buffer(int term, int x, int y) {
+	// if(temp) {
+	// 	printf("UB from (%d,%d) to (%d,%d)",stdin[term].x, stdin[term].y, x,y);
+	// }
+	stdin[term].x = x;
+	stdin[term].y = y;
+}
 
 void keyboard_init(){
 	int i;
@@ -78,12 +96,14 @@ void put_char_buff(char c, int term) {
 	// y2 = stdin[2].y;
 
     if(c == '\n' || c == '\r') {
+    	// printf("\nGot Enter\n");
     	if(stdin[term].y== NUM_ROWS-1){ //if last line, scroll
     		scroll_buff(term);
     	}
-    	else
-        stdin[term].y++;
-        stdin[term].x=0;
+    	else{
+    		stdin[term].y++;
+       		stdin[term].x=0;
+    	}
     } else {
     	uint32_t addr = get_vid_buf_addr(term);
 		*(uint8_t *)(addr + ((NUM_COLS*(stdin[term].y) + stdin[term].x) << 1)) = c;
@@ -120,11 +140,13 @@ void scroll_buff(term) {
 		for(x=0; x<NUM_COLS; x++){
 		//move each row up
 		*(uint8_t *)(addr+ ((NUM_COLS*y+x)<<1))=*(uint8_t *)(addr+ ((NUM_COLS*(y+1)+x)<<1));
+		*(uint8_t *)(addr+ ((NUM_COLS*y+x)<<1) + 1)=*(uint8_t *)(addr+ ((NUM_COLS*(y+1)+x)<<1) + 1);
 		}
 	}
 	//clear out last line
 	for(x=0; x<NUM_COLS; x++){
 		*(uint8_t *)(addr+ ((NUM_COLS*(NUM_ROWS-1)+x)<<1))= 0;
+		*(uint8_t *)(addr+ ((NUM_COLS*(NUM_ROWS-1)+x)<<1) + 1)= ATTRIB;
 	}
 	stdin[term].x = 0;
 	stdin[term].y = NUM_ROWS-1;
@@ -158,7 +180,7 @@ int32_t keyboard_read(void* buf, int32_t nbytes){
 		c = get_char(active_terminal, stdin);
 		((char *) buf)[bytesread++] = c;
 		if(c == '\n'){
-			stdin[active_terminal].start= stdin[active_terminal].end;
+			// stdin[active_terminal].start= stdin[active_terminal].end;
 			break;	
 		}
 		// Get rid of backspace and input before
@@ -293,6 +315,7 @@ void keyboard_handle(){
 				else if (key==F3)
 					viewed=2;
 				else if (key_input == 'c') {
+					// viewed = active_terminal;
 					spin_unlock(lock);
 					send_eoi(1);
 					sti();
@@ -305,11 +328,12 @@ void keyboard_handle(){
 //printf("term: %d\n", viewed);
 				if (active_terminal != viewed){
 					//printf("Switching Terminal\n");
+					save_this_terminal(active_terminal, viewed, stdin);
 					spin_unlock(lock);
 					send_eoi(1);
 					sti();
-					save_this_terminal(active_terminal, viewed, stdin);
 					switchterm(viewed);
+					return;
 			//	return;
 				//some kind of iret
 			}

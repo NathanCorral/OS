@@ -212,7 +212,7 @@ interruptinit(); //initialize interrupts
 	
 	keyboard_open();
 	terminal_open();
-	programs_init();
+	init_mem();
 	// for (x=0; x<128; x++)
 	// printf("%c", string[x]);
 

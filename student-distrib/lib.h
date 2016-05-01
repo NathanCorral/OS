@@ -18,6 +18,7 @@
 
 
  void set_key_write(int term);
+ void init_mem();
 
 int32_t printf(int8_t *format, ...);
 void putc(uint8_t c);

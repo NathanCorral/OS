@@ -98,6 +98,9 @@ void pageinit(){
 	flags = (SET_P) | (SET_R);
 	table_init(&kernel_vid, 0, KILO4);
 	kernel_vid.table[VIDDIV] = VIDEO | flags;
+	kernel_vid.table[VIDDIV+1] = VIDBUF0 | flags;
+	kernel_vid.table[VIDDIV+2] = VIDBUF1 | flags;
+	kernel_vid.table[VIDDIV+3] = VIDBUF2 | flags;
 	mm_init(&kernel_init, &kernel_dir, 0, MEGA4, 0, MEGA4);
 	set_map(&kernel_init, 0, (uint32_t) &kernel_vid, flags);
 	flags |= (SET_S);
@@ -116,10 +119,7 @@ void pageinit(){
 	// printf("kernel dir addr 0x%#x\n", kernel_pagedir);
 	// kernel_init(kernel_pagedir);
 	// pagedir = kernel_pagedir;
-
 	//printf("Ending Page Init\n");
-
-
 }
 
 void kernel_setup(mem_map_t * dir) {
@@ -225,7 +225,7 @@ void * kmalloc(uint32_t nbytes) {
 //  strcpy(pcb->argsave, (int8_t *)argbuf);
 
 // In progress
-pcb_t * alloc_prog(int PID){
+pcb_t * alloc_prog(int PID) {
 	int i;
 	mem_map_t * prog_dir = get_table(kernel_heap, 0, MEGA4);
 	// printf("After getting new Table\n");
@@ -249,6 +249,8 @@ pcb_t * alloc_prog(int PID){
 	//printf("alloc3\n");
 	// Set TSS for 1 page kernel stack
 	tss.esp0 = get_page(kernel_heap, flags);
+	pcb->kernel_bp = tss.esp0;
+	pcb->espsave = tss.esp0;
 	// printf("After getting new K stack\n");
 	tss.ss0 = KERNEL_DS;
 	//printf("alloc4\n");
@@ -406,15 +408,21 @@ void print_heap(heap_t * heap, int num) {
 void paging_test(){
 	print_dir();
 	print_heap(kernel_heap, 0);
-	int i;
-	int  * test;
-	for(i=0; i<(6*KILO4); i++) {
-		test = (int *)  kmalloc(31);
-		*test = 5;
-		// printf("Malloc %d, at addr 0x%#x, reads %d\n", i, test, test[0]);
+	int i, j, malloc_size = 32;
+	int amount = 7*KILO4;
+	uint32_t  * test = (uint32_t *) kmalloc(amount * 4);
+	for(i=0; i<amount; i++) {
+		// test = (uint8_t *)  kmalloc(malloc_size);
+		test[i] = get_page(kernel_heap, (SET_P) | (SET_R));
+		printf("Malloc  ");
+		// for(j=0; j<malloc_size; j++) {
+		// 	*(test  + j) = 0x05;
+		// }
+		printf("%d, at addr 0x%#x, reads %d\n", i, test[i], 0);
 		//get_table(kernel_heap, 2, KILO4);
 	}
 	print_heap(kernel_heap, 0);
+
 	// int * test = (int *) 0x01800000;
 	// int i, pop;
 	// uint32_t first, second, third, fourth, fifth;

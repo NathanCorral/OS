@@ -1,7 +1,7 @@
 #include "mp3.2_test.h"
 
 void test_mp3_2(){
-	//paging_test();
+	// paging_test();
 	//test_rtc();
 	//test_io();
 	//test_filesystem();
@@ -107,6 +107,7 @@ void test_mp3_2(){
 // }
 
 void test_execute(){
+	programs_init();
 	execute("shell");
 
 }
