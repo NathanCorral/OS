@@ -70,7 +70,7 @@ void switch_to(pcb_t * pcb) {
 	}
 
 	// Get next pcb
-	cli();
+	//cli();
 	if(pcb == NULL) {
 		pcb = running_process->next;
 		while(pcb->child != NULL) {
@@ -91,7 +91,7 @@ void switch_to(pcb_t * pcb) {
 	running_process = pcb;
 	page_set(running_process->dir);
 	// Set Saved State
-	sti();
+	//sti();
 	tss.esp0= running_process->kernel_sp; 
 	// tss.ss0= running_process->kernel_ss;
 	asm volatile ("movl %0, %%ebp     ;"

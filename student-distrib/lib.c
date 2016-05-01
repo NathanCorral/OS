@@ -169,7 +169,7 @@ void switchterm(int newterm){
 
 	if(newterm>=0 && newterm<3){
 
-		cli();
+		//cli();
 		// memcpy(vidbuff[activeterm], video_mem, KB4); //save video memory
 		memcpy(video_mem, vidbuff[newterm], KB4); //show new memory
 	
@@ -188,7 +188,7 @@ void switchterm(int newterm){
 		pcb_t * pcb = get_prog(activeterm);
 		//sti();
 		switch_to(pcb);
-		sti();
+		//sti();
 	}
 return;
 

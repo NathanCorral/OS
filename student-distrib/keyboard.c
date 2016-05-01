@@ -328,7 +328,6 @@ void keyboard_handle(){
 //printf("term: %d\n", viewed);
 				if (active_terminal != viewed){
 					//printf("Switching Terminal\n");
-					cli();
 					save_this_terminal(active_terminal, viewed, stdin);
 					spin_unlock(lock);
 					send_eoi(1);
