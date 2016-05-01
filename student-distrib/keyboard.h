@@ -38,7 +38,7 @@ struct buf_t {
 	int y;
 	uint8_t buf[BUF_SIZE];
 };
-
+extern buf_t stdin[3];
 extern char getc();
 
 extern void keyboardopen();
@@ -62,4 +62,5 @@ extern void keyboard_handle();
 
 
 #endif
+
 

@@ -1,0 +1,123 @@
+SOSx Bug Log
+
+
+Checkpoint 1:
+
+Bug: not printing characters, not interfacing with handler
+Solution: keyboardirq assembly linkage to save registers
+Time: 1 hour
+
+Bug: keyboard not printing multiple characters
+Solution: move send eoi so that it is always sent 
+Time: 1 hour
+
+Bug: RTC interrupts never happening
+Solution: enabling interrupts for port 2 on the master
+Time: 1 day
+
+Bug: page fault when initializing paging
+Solution: redo flags on each entry, no write through or caching, align pages
+Time: 1 hours
+
+Bug: page fault on page enable
+Solution: reorder changing of registers, make sure to change cr4
+Time: 2 hours
+
+
+
+
+Checkpoint 2:
+
+Bug: backspace not changing buffer
+Solution: make sure to decrement index in write fuction as well
+Time: 1 hour
+
+Bug: buffer overflow not handled
+Solution: check for overflow conditions before printing in handler and write
+Time: 1 hour
+
+Bug: control and alt keys printing space
+Solution: check for null before printing, call separate functions with special keys
+Time: 1 hour
+
+
+
+
+Checkpoint 3:
+
+Bug: not setting entry point correctly in execute
+Solution: make buffer unsigned 
+Time: 1 hour
+
+Bug: could not keep track of last shell running
+Solution: make parent parameter in pcb, set to -1 if nothing running
+Time: 2 hours
+
+Bug: page fault at iret
+Solution: push user stack location onto stack before iret 
+Time: 1 day
+
+Bug: page fault with execute
+Solution: save esp/ebp in pcb later to ensure correct
+Time: 3 hours
+
+Bug: not returning from halt correctly
+Solution: make label at end of execute, return to label
+Time: 2 hours
+
+Bug: not reading from rtc
+Solution: count interrupts in rtc 
+Time: 1 hour
+
+
+
+
+Checkpoint 4:
+
+Bug: fish not printing to screen properly
+Solution: map the vidmap page in every new page, not just the initialization
+Time: 1 day
+
+
+
+
+Checkpoint 5:
+
+Bug: not printing to correct location in new terminal
+Solution: clear screen before executing first shell in new terminal
+Time: 1 day
+
+Bug: page fault- not returning to old terminal correctly
+Solution: redo paging and tss.ss0 before reseting esp/ebp to old values
+Time: 1 day
+
+Bug: triple faults with scheduling
+Solution: call switch function in pit, not step through all processes
+Time: 2 days
+
+Bug: more triple faults with scheduling
+Solution: redo paging
+Time: 3 days
+
+Bug: page fault when changing terminals quickly
+Solution: change cli/sti
+Time: 1 day
+
+Bug: exiting last terminal halted programs
+Solution: went back to go to user intsead of rerunning shell
+Time: 1 hour
+
+Bug: counter made cursor in other terminals misplaced
+Solution: always write to terminal video memory, only print to screen at saved location if needed 
+Time: 2 hours
+
+Bug: cat rtc returning too quickly
+Solution: move interrupt= 0 to before while loop
+Time: 1 hour
+
+
+
+
+
+
+

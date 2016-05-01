@@ -9,6 +9,7 @@
 #include "stack.h"
 
 
+
 #define maxfd 7
 #define MB8 0x800000
 #define EMPTYMASK 0x7F
@@ -77,6 +78,7 @@ void switch_to(pcb_t * pcb) {
 			pcb = pcb->child;
 		}
 	}
+
 	if(pcb == running_process)
 		return;
 
@@ -381,7 +383,7 @@ int32_t halt(int8_t status){
 	//don't want to close final shell, so restart it just to be sure
 
 	if (pcb->parent_process==NULL){
-		sti();
+		// sti();
 		// running_process = NULL;
 		// execute("shell");
 		uint32_t entrypoint = 0;
@@ -880,4 +882,5 @@ void setkstack(uint32_t set){
 void setpdaddr(uint32_t set){
 	//pdaddr=set;
 }
+
 

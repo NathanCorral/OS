@@ -1,0 +1,131 @@
+
+Checkpoint 1:
+
+
+Reuben:
+	RTC
+	PIC
+
+
+Mary:
+	Load GDT
+	Initialize IDT
+	Keyboard
+	PIC
+	Paging
+
+
+Nathan:
+	Keyboard
+	PIC
+
+
+Robert:
+	RTC
+
+
+
+
+
+
+
+
+Checkpoint 2:
+
+
+Reuben:
+	RTC
+
+
+Mary:
+	Keyboard
+	Filesystem
+
+
+Nathan:
+	Keyboard
+	Filesystem
+	Terminal
+
+
+Robert:
+	RTC
+
+
+
+
+
+Checkpoint 3:
+
+
+Reuben:
+	Execute
+	Halt
+	PCB
+	Read
+	Write
+
+
+Mary:
+	Execute
+	Halt
+	PCB
+	User IRET context switching
+	Loader
+	Read
+	Write
+
+
+Nathan:
+	Started extracredit
+	Spinlock
+	
+Robert:
+
+
+
+
+
+Checkpoint 4:
+
+
+Reuben:
+	Vidmap debugging
+
+
+Mary:
+	Getargs
+	Vidmap
+
+
+Nathan:
+
+
+Robert:
+
+
+
+
+
+Checkpoint 5:
+
+
+Reuben:
+	Terminal Switching
+	Scheduling
+
+
+Mary:
+	Terminal Switching
+	Scheduling
+	
+Nathan:
+	More keyboard buffers
+	Alter terminal
+	Scheduling
+	Redo Paging
+	Memory mapping
+
+
+Robert:
+	Terminal Switching
