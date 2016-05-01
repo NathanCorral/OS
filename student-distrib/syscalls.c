@@ -441,10 +441,11 @@ int32_t halt(int8_t status){
 	running_process = pcb->parent_process;
 	running_process->child = NULL;
 	page_set(running_process->dir);
-	sti();
+	//sti();
 	// Set Saved State
 	tss.esp0= running_process->kernel_sp; 
 	tss.ss0= running_process->kernel_ss;
+	sti();
 //go bacck to execute
 	asm volatile ("movl %0, %%ebp     ;"
 				"movl %1, %%esp     ;"

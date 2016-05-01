@@ -186,9 +186,9 @@ void switchterm(int newterm){
 			return;
 		}
 		pcb_t * pcb = get_prog(activeterm);
-		sti();
+		//sti();
 		switch_to(pcb);
-
+		sti();
 	}
 return;
 

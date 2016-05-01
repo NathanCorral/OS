@@ -12,6 +12,8 @@
 #define CMRP 0x43
 #define HZ20 59659
 #define HZ33 36157
+#define HZ15 79545
+#define HZ25 47727
  extern void pit_handle();
  void pit_init();
 
