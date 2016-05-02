@@ -159,9 +159,6 @@ void kernel_setup(mem_map_t * dir) {
 	set_map( dir, 0, (uint32_t) vidtab->table, flags );
 }
 
-void pageenable(){
-	page_set(pagedir);
-}
 
 uint8_t * map_user_vid() {
 	table_t * vid_tab = (table_t *) kmalloc(KILO4);
@@ -231,7 +228,7 @@ pcb_t * alloc_prog(int PID) {
 	// setup PCB
 	uint32_t flags = SET_P | SET_R;
 	//printf("alloc1\n");
-	pcb_t * pcb = (pcb_t *) get_mult_page(kernel_heap, flags, PCB_PAGE_NUM);
+	pcb_t * pcb = (pcb_t *) get_page(kernel_heap, flags);
 	// printf("PCB at 0x%#x ends at 0x%#x\n", pcb, &(pcb->dir));
 	//printf("alloc2\n");
 	// pcb->kernel_sp=tss.esp0;
@@ -407,7 +404,8 @@ void print_heap(heap_t * heap, int num) {
 void paging_test(){
 	print_dir();
 	print_heap(kernel_heap, 0);
-	int i, j, malloc_size = 32;
+	int i;
+	// int malloc_size = 32;
 	int amount = 7*KILO4;
 	uint32_t  * test = (uint32_t *) kmalloc(amount * 4);
 	for(i=0; i<amount; i++) {

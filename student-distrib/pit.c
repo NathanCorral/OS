@@ -4,8 +4,8 @@
 
  void pit_init(){
  	outb(MODE3, CMRP);
- 	outb(HZ20 & 0xFF, CHANNEL0);
- 	outb(HZ20>>8, CHANNEL0);
+ 	outb(HZ33 & 0xFF, CHANNEL0);
+ 	outb(HZ33>>8, CHANNEL0);
  	enable_irq(0);
  }
 

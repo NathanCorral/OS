@@ -2,6 +2,7 @@
 
 
 #include "errors.h"
+#include "syscalls.h"
 #include "lib.h"
 //print name of exception for each exception
 void dividebyzero(){

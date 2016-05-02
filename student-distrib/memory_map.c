@@ -20,6 +20,54 @@
 // table
 #define small(heap) (heap->phys_mem->table != NULL)
 
+/*
+Helper Functions 
+*/
+// Help set up the largest heap which hands out 4KB pages and has a total size of 4MB
+// Used during heap_init and large_heap init
+heap_t * heap_setup(mem_map_t * phys, uint32_t virt_addr, uint32_t alloc_flags);
+
+// Initialize a new heap of size 4MB which hands out 4KB pages
+// This is called when a heap has run out of 4 KB pages to hand out and needs to
+// get a new 4MB page from physical memory.
+// The new heap is linked to the next pointer in the heap that called it
+int large_heap_init(heap_t * heap);
+
+// Recusive function that sets up a smaller heap to keep track of Smaller memory
+// For example, A large heap has size 4 MB and hands out 4 KB pages. The large heap
+// has a pointer to smaller heaps which can keep track of 32 B and hand out chuncks with
+// that size.  In order to do this the smaller heap will get (32 * 1024)/4KB pages from the
+// larger heap and set them as used.  When malloc is called for an amount smaller than 4KB
+// we go to the smaller heap and let it keep track of the smaller allocations
+// This is done recursivly where the maximum size a heap will hand out is 32 * the heap
+// page size.
+heap_t * small_heap_init(uint32_t flags, mem_map_t * mem, uint32_t bigger_page_size);
+
+// Create a new heap of the same size as the one it is called on
+// If this fails then the larger heap has run out of memory and we need to call this
+// function on the larger heap
+// This will only fail on the 4 MB heap if we run out of physical memory
+int new_heap(heap_t * heap);
+
+// Get a new smallest heap. Will probably be phased out since it is only called for new
+// memory maps which can be malloced
+int new_smallest_heap(heap_t * heap);
+
+// Returns the entry into the memory map.  Called from get.
+uint32_t get_entry(mem_map_t * mem_map, uint32_t flags);
+
+// When getting continous entries we first look at the 32 entry into the mm bitmap
+// If the 32 entry is '0' Then there are 32 continous entries that we can return
+// If every entry in 32 is '1' or amount > 32 then  we call this function to walk through
+// the mm bitmap and try to find amount unused entries
+uint32_t look_slow(mem_map_t * mem_map, uint32_t flags, int amount);
+
+// When the memory map queue becomes empty we call this to add unused entries to the queue
+int refill_queue(mem_map_t * mem_map);
+/*
+End of Helper Functions
+*/
+
 mem_map_t * cur_map = NULL;
 
 // Set map_cur_page to null if the current page should not be mapped
@@ -364,7 +412,7 @@ uint32_t allocate_mem(heap_t * heap, uint32_t nbytes) {
 
 }
 */
-int map_count = 0;
+// int map_count = 0;
 // Returns an uninitialized memory map
 mem_map_t * get_map(heap_t * heap) {
 	// Need to end recursion
@@ -382,7 +430,7 @@ mem_map_t * get_map(heap_t * heap) {
 		}
 		cur_heap = cur_heap->next;		
 	}
-	map_count++;
+	// map_count++;
 	mem_map_t * ret = &(cur_heap->maps[queue_pop(cur_heap->open_maps)]);
 	// printf("Found map num %d at 0x%#x\n", map_count, ret);
 	return ret;

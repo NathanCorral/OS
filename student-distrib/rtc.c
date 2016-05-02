@@ -1,6 +1,6 @@
 #include "rtc.h"
-int count = 0;
-int interrupt = 0;  // Checks if an interrupt has occurred
+volatile int count = 0;
+volatile int interrupt = 0;  // Checks if an interrupt has occurred
 void rtc_handle(){
 	// NOTE::: delete cli/ sti after we make a common handler
 	cli();
@@ -36,10 +36,11 @@ int32_t rtc_close(int32_t fd){
 }
 int32_t rtc_read(const int8_t *fname, uint32_t offset, uint8_t * buf, uint32_t nbytes){
 	sti();
+	interrupt = 0;
 	while(interrupt == 0){ // Do nothing until the interrupt handler clears the flag
 		/* Wait for an interrupt to occur */
 	}
-	interrupt = 0; // Clears the flag
+	// interrupt = 0; // Clears the flag
 	return 0;
 }
 

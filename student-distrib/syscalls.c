@@ -351,8 +351,7 @@ int32_t execute(const int8_t * cmd){
 	// asm volatile ("movl %0, %%ebp     ;"
 	// 			"movl %1, %%esp     ;"
 	// 			::"g"(running_process->kernel_bp), "g"(running_process->espsave));
-	if(setup)
-		return 0;
+
 	gotouser(entrypoint);
 	asm volatile ("haltreturn: ");
 
@@ -387,7 +386,7 @@ int32_t halt(int8_t status){
 		// running_process = NULL;
 		// execute("shell");
 		uint32_t entrypoint = 0;
-		if(fsread((const uint8_t *)("shell"), ENTRYPT, (uint8_t *)buf, 4)==-1){
+		if(fsread((const int8_t *)("shell"), ENTRYPT, (uint8_t *)buf, 4)==-1){
 			return -1;
 		}
 		for(i=0; i<4; i++){

@@ -53,7 +53,7 @@ int32_t keyboard_read(void* buf, int32_t nbytes);
 void print_keyboard_info();
 void update_buffer(int term, int x, int y);
 void put_char_buff(char c, int term);
-void scroll_buff(term);
+void scroll_buff(int term);
 
 int32_t keyboard_write(const void *buf, int32_t nbytes);
 //extern int32_t keyboardclose();

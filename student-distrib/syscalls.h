@@ -70,10 +70,54 @@ struct pcb_t{
 
 
 // function to execute user code
+/*
+switch_to:  Save state of running program and switch to next program
+			pcb is NULL switch to next program on LL
+			Remap user video space so the old program doesnt write to the screen
+			set page directory of new program
+			set kernel stack and tss for the new process
+			return to wherever the process was switched from
+	Inputs: 
+		pcb: Program to switch to
+	Returns:
+*/
 void switch_to(pcb_t * pcb);
+
+// Get pogram running on term or the running program if term == -1
 pcb_t * get_prog(int term);
+
+/*
+execute:  Execute the cmd.
+			Save state of running program
+			Parse through cmd to get arguments and name of new program to run
+			Get new PID and allocate new pogram
+			Set program parent and running program child.  Add Program to LL
+			Copy program data from filesystem
+			Open stdin and stdout
+			Push artifical iret onto stack and iret
+			Set up return position for halt
+	Inputs: 
+		cmd: Command to be execute
+	Returns:
+		The halt status or -1 if executing program fails
+*/
 int32_t execute(const int8_t * cmd);
+
+
+/*
+halt:  halt the running process.  Start the parent process
+			If process doesnt have parent re-execute shell
+			Delete process from LL and add PID to queue
+			Set page and stack for parent and jump to haltreturn in execute to return 
+				the status that the child halted with
+	Inputs: 
+		status: Status of halt
+	Returns:
+		Doesnt really return,  Just jumps to execute return
+*/
 int32_t halt(int8_t status);
+
+
 void stdinopen (int32_t fd);
 void stdoutopen (int32_t fd);
 int32_t open(const uint8_t * filename);
