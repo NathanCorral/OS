@@ -20,6 +20,11 @@
 // table
 #define small(heap) (heap->phys_mem->table != NULL)
 
+#define get_entry_from_addr(heap, addr) ((addr - heap->heap_table.start)/heap->heap_table.size)
+
+#define set_size(sizes, entry, size) (sizes[entry/6] |= ((size & 0x1F) << 5*(entry % 6)))
+#define get_size(sizes, entry) ((sizes[entry/6] >> (5*(entry %6))) & 0x1F)
+
 /*
 Helper Functions 
 */
@@ -64,6 +69,7 @@ uint32_t look_slow(mem_map_t * mem_map, uint32_t flags, int amount);
 
 // When the memory map queue becomes empty we call this to add unused entries to the queue
 int refill_queue(mem_map_t * mem_map);
+
 /*
 End of Helper Functions
 */
@@ -81,6 +87,7 @@ heap_t * heap_init(mem_map_t * phys, uint32_t virt_addr, uint32_t alloc_flags) {
 	uint32_t page_size = BIGGEST_HEAP / TABLESIZE;
 	// printf("Starting Small Init\n");
 	new_heap->small_heap = small_heap_init(new_heap->flags, map(new_heap), page_size);
+
 	return new_heap;
 }
 
@@ -134,6 +141,9 @@ heap_t * heap_setup(mem_map_t * phys, uint32_t virt_addr, uint32_t alloc_flags) 
 		//mm_init( &(new_heap->maps[i]), NULL, 0, 0 );
 		queue_push(new_heap->open_maps, i);
 	}
+	for(i=0; i<171; i++) {
+		new_heap->sizes[i] = 0;
+	}
 
 	return new_heap;
 }
@@ -147,45 +157,33 @@ void * _malloc(heap_t * heap, uint32_t nbytes) {
 		return NULL;
 
 	void * ret;
-	if(heap->next != NULL && ((ret = _malloc(heap->next, nbytes)) != NULL))
-		return ret;
-
-	if((nbytes < (heap->heap_table.size * HEAP_RATIO)) && (heap->small_heap != NULL) && ((ret = _malloc(heap->small_heap, nbytes)) != NULL))
-		return ret;
-
-	// // printf("New _malloc %d from heap at 0x%#x with size 0x%#x\n", (int) nbytes, heap, (int) heap->heap_table.size);
-	// // Test if we want to allocate in smaller heap
-	// if((nbytes < (heap->heap_table.size * HEAP_RATIO)) && (heap->small_heap != NULL)) {
-	// 	void * ret;
-	// 	// Check if we need new smaller heap
-	// 	if((ret = _malloc(heap->small_heap, nbytes)) == NULL) {
-	// 		// Check smaller heap of next heaps or let them allocate new small heaps
-	// 		int c=0;
-	// 		while(heap->next != NULL){
-	// 			printf("Moving To Next %d with heap size 0x%#x\n", c,heap->heap_table.size);
-	// 			c++;
-	// 			if((ret = _malloc(heap->next, nbytes)) != NULL) {
-	// 				return ret;
-	// 			}
-	// 			heap = heap->next;
-	// 		}
-	// 		if(new_heap(heap) < 0)
-	// 			return NULL;
-	// 		return _malloc(heap->next, nbytes);
-	// 	}
-	// 	return ret;
-	// }
-	// printf("New _malloc %d from heap at 0x%#x with size 0x%#x\n", (int) nbytes, heap, (int) heap->heap_table.size);
+	if((nbytes < (heap->heap_table.size * HEAP_RATIO)) && (heap->small_heap != NULL)) {
+		ret = _malloc(heap->small_heap, nbytes);
+		if(ret == NULL) {
+			if(new_heap(heap) < 0) {
+				return NULL;
+			}
+			return _malloc(heap->next, nbytes);
+		}
+		else
+			return ret;
+	}
 
 	uint32_t pages = ceiling(heap, nbytes);
 	// printf("Num pages %d\n", (int) pages);
 	uint32_t ret_addr;
 	int cout = 0;
+	// heap_t * start_heap = heap;
 	while(heap->next != NULL) {
 		// printf("While loop %d with heap 0x%#x with %d used and next 0x%#x\n", cout, heap, heap->heap_table.used, heap->next);
 		cout++;
 		if((ret_addr = get_continuous(map(heap), heap->flags, pages)) != -1) {
 			// printf("Got addr 0x%#x\n", ret_addr);
+			uint32_t entry = get_entry_from_addr(heap, ret_addr);
+			// printf("Entry %d\n", entry);
+			set_size(heap->sizes, entry, pages);
+			//get_size(heap->sizes,entry)
+			// printf("Size %d, Pages %d, Bytes %d\n",get_size(heap->sizes,entry), pages, nbytes);
 			return (void *) ret_addr;
 		}
 		// printf("Checking next heap\n");
@@ -194,6 +192,10 @@ void * _malloc(heap_t * heap, uint32_t nbytes) {
 	// printf("Here\n");
 	if((ret_addr = get_continuous(map(heap), heap->flags, pages)) != -1) {
 		// printf("Got addr 0x%#x\n", ret_addr);
+		uint32_t entry = get_entry_from_addr(heap, ret_addr);
+		// printf("Entry2 0x%#x\n", entry);
+		set_size(heap->sizes, entry, pages);
+		// printf("Size %d, Pages %d, Bytes %d\n",get_size(heap->sizes,entry), pages, nbytes);
 		return (void *) ret_addr;
 	}
 	
@@ -206,17 +208,77 @@ void * _malloc(heap_t * heap, uint32_t nbytes) {
 	return _malloc(heap->next, nbytes);
 }
 
+void _free(heap_t* heap, void* addr) {
+	if(heap == NULL)
+		return;
+	uint32_t entry = get_entry_from_addr(heap, (uint32_t) addr);
+	// printf("free %d\n", entry);
+	if(((uint32_t) addr < heap->heap_table.start) || (entry >= 1024)) {
+		_free(heap->next, addr);
+		return;
+	}
+	// if(get_size(heap->sizes,entry) == 0) {
+	// 	_free(heap->small_heap, addr);
+	// }
+	heap_t* temp;
+	if(get_size(heap->sizes, entry) == 0){
+		temp = heap->small_heap;
+	}
+	else{
+		temp = heap;
+	}
 
-int large_count = 0;
+	while((entry = get_entry_from_addr(temp, (uint32_t) addr)) >= 1024) {
+		temp = temp->next;
+		if(temp == NULL) {
+			temp = heap->small_heap;
+			heap = temp;
+			if(temp == NULL)
+				return;
+		}
+	}
+	heap = temp;
+
+	int i, size = get_size(heap->sizes,entry);
+	// printf("In Free Entry: %d, Size %d, from heap 0x%#x w/ map 0x%#x\n", entry, size, heap, map(heap));
+	for(i=0; i<size; i++) {
+
+		free(map(heap), entry+i);
+
+	}
+	// printf("Finished Free\n");
+	// while(1);
+}
+
+
+// int large_count = 0;
 
 int large_heap_init(heap_t * heap) {
-	printf("New Large Heap %d\n", large_count);
-	large_count++;
+	// printf("New Large Heap %d from heap 0x%#x w/ phys: 0x%#x\n", large_count, heap, heap->phys_mem);
+	// large_count++;
 	// print_mm(map(heap),0, 5);
 	// while(1);
 	heap_t * new_heap = heap_setup(heap->phys_mem, NULL, heap->flags);
 	if(new_heap == NULL)
 		return -1;
+
+	uint32_t page_size = BIGGEST_HEAP / TABLESIZE;
+	new_heap->small_heap = small_heap_init(new_heap->flags, map(new_heap), page_size);
+
+	heap_t * temp1;
+	heap_t * temp2;
+	temp1 = heap->small_heap;
+	temp2 = new_heap->small_heap;
+	// int c1=0, c2=0;
+	while((temp1 != NULL) && (temp2 != NULL)) {
+		while(temp1->next != NULL) {
+			temp1 = temp1->next;
+		}
+		// temp2->next = temp1->next;
+		temp1->next = temp2;
+		temp1 = temp1->small_heap;
+		temp2 = temp2->small_heap;
+	}
 
 	new_heap->next = heap->next;
 	heap->next = new_heap;
@@ -268,11 +330,15 @@ heap_t * small_heap_init(uint32_t flags, mem_map_t * mem, uint32_t bigger_page_s
 		//mm_init( &(small->maps[i]), NULL, 0, 0 );
 		queue_push(small->open_maps, i);
 	}
+	for(i=0; i<171; i++) {
+		small->sizes[i] = 0;
+	}
 
 	// Recursive call ends when map_size < SMALLEST_AMOUNT
 	// Use same physv memory for each heap
 	// printf("Small 0x%#x\n", small);
 	small->small_heap = small_heap_init(flags, mem, map_size);
+	// small->small_heap =NULL;
 	return small;
 }
 
@@ -280,6 +346,7 @@ int new_heap(heap_t * heap) {
 	uint32_t heap_flags = (SET_P) | (SET_R);
 	uint32_t addr;
 	int i;
+	// printf("New Heap size %d from 0x%#x\n", heap->heap_table.size, heap->phys_mem);
 	// different allocations for small heaps and the biggest heap
 	// since the biggest heap only requires one page for itself and
 	// the memory it maps
@@ -287,34 +354,55 @@ int new_heap(heap_t * heap) {
 		// Page for heap
 		// printf("New small heap \n");
 		addr = get(heap->phys_mem, heap_flags);
-		if(addr == -1)
-			return -1;
-
-		heap_t * new_heap = (heap_t *) addr;
-		int num_pages = (heap->heap_table.size * KILO4) / (heap->phys_mem->size);
-		if((addr = get_continuous(heap->phys_mem, heap->flags, num_pages)) == -1) {
-			uint32_t entry = (((uint32_t) new_heap) - heap->phys_mem->start)/ (heap->phys_mem->size); 
-			free(heap->phys_mem, entry);
-			printf("New Heap Size 0x%#x from 0x%#x failed\n", heap->heap_table.size, heap);
+		if(addr == -1){
+			// printf("Heap S 0x%#x from 0x%#x failed\n", heap->heap_table.size, heap);
+			heap_t* cur_heap = heap->next;
+			while(cur_heap != NULL) {
+				if(cur_heap->phys_mem != heap->phys_mem) {
+					return new_heap(cur_heap);
+				}
+				cur_heap = cur_heap->next;
+			}
 			return -1;
 		}
+		// printf("Addr: 0x%#x\n", addr);
+
+		heap_t * new = (heap_t *) addr;
+		int num_pages = (heap->heap_table.size * KILO4) / (heap->phys_mem->size);
+		if((addr = get_continuous(heap->phys_mem, heap->flags, num_pages)) == -1) {
+			uint32_t entry = (((uint32_t) new) - heap->phys_mem->start)/ (heap->phys_mem->size); 
+			free(heap->phys_mem, entry);
+			// printf("New Heap Size 0x%#x from 0x%#x failed\n", heap->heap_table.size, heap);
+			heap_t* cur_heap = heap->next;
+			while(cur_heap != NULL) {
+				if(cur_heap->phys_mem != heap->phys_mem) {
+					return new_heap(cur_heap);
+				}
+				cur_heap = cur_heap->next;
+			}
+			return -1;
+		}
+		// printf("Addr: 0x%#x\n", addr);
 		//uint32_t phys_entry = addr >> ENTRY_OFFSET; 
 
-		mm_init(map(new_heap), NULL, addr, heap->heap_table.size, 0,0);
+		mm_init(map(new), NULL, addr, heap->heap_table.size, 0,0);
 
-		new_heap->next = heap->next;
-		new_heap->small_heap = NULL;
-		new_heap->phys_mem = heap->phys_mem;
-		new_heap->flags = heap->flags;
+		new->next = heap->next;
+		new->small_heap = NULL;
+		new->phys_mem = heap->phys_mem;
+		new->flags = heap->flags;
 		for(i = 0; i < (NUM_MAPS); i++) {
 			//mm_init( &(small->maps[i]), NULL, 0, 0 );
-			queue_push(new_heap->open_maps, i);
+			queue_push(new->open_maps, i);
+		}
+		for(i=0; i<171; i++) {
+			new->sizes[i] = 0;
 		}
 		//print_mm(heap->phys_mem, 31, 1);
 
-		heap->next = new_heap;
-		//printf("New heap %d at 0x%#x linked to 0x%#x\n", new_heap->heap_table.size, new_heap, heap);
-		//printf("start %d size 0x%d used %d\n", new_heap->phys_mem->size, new_heap->phys_mem->start, new_heap->phys_mem->used);
+		heap->next = new;
+		// printf("New heap %d at 0x%#x linked to 0x%#x\n", new_heap->heap_table.size, new_heap, heap);
+		// printf("start %d size 0x%d used %d\n", new_heap->phys_mem->size, new_heap->phys_mem->start, new_heap->phys_mem->used);
 		return 0;
 	}
 	// Allocate big heap
@@ -535,7 +623,8 @@ void set_map(mem_map_t * mem_map, uint32_t virt_addr, uint32_t phys_addr, uint32
 }
 
 void set(mem_map_t * mem_map, uint32_t entry, uint32_t flags) {
-	mem_map->used++;
+	if(!exists(mem_map, entry))
+		mem_map->used++;
 	// Mark entry as used
 	mem_map->mm[mm_idx(entry)] |= (1 << mm_off(entry));
 	// Set group as not completely open
@@ -550,8 +639,8 @@ void free(mem_map_t * mem_map, uint32_t entry) {
 		return;
 
 	// printf("Free Page %d\n", entry);
-
-	mem_map->used--;
+	if(exists(mem_map, entry))
+		mem_map->used--;
 	// Mark entry as unused
 	mem_map->mm[mm_idx(entry)] &= ~(1 << mm_off(entry));
 
@@ -565,6 +654,11 @@ void free(mem_map_t * mem_map, uint32_t entry) {
 		queue_push(mem_map->quicklist, entry); 
 
 	if(mem_map->table != NULL) {
+		// if(entry == 10){
+		// 	printf("Erease table: 0x%#x\n", mem_map->table->table[entry]);
+		// 	mem_map->table->table[entry] = 0x10063;
+		// 	return;
+		// }
 		mem_map->table->table[entry] &= ADDR_ENTRY;
 	}
 }
@@ -605,7 +699,16 @@ uint32_t get_entry(mem_map_t * mem_map, uint32_t flags) {
 uint32_t get(mem_map_t * mem_map, uint32_t flags) {
 	if(mem_map->used >= TABLESIZE)
 		return -1;
+	// int i, count=0;
+	// for(i=0; i<TABLESIZE; i++) {
+	// 	if(exists(mem_map,i))
+	// 		count++;
+	// }
+	// if(count != mem_map->used) {
+	// 	printf("Used: %d,  Actual: %d from 0x%#x\n",mem_map->used, count, mem_map);
+	// }
 	uint32_t entry = get_entry(mem_map, flags);
+		
 
 	// printf("Get Entry %d from 0x%#x with used %d\n", entry, mem_map, heap->heap_table.size);
 	// printf("Start : %#x  Size:  %#x  Ret %#x\n",mem_map->start, mem_map->size, entry * mem_map->size + mem_map->start );
@@ -654,8 +757,9 @@ uint32_t look_slow(mem_map_t * mem_map, uint32_t flags, int amount) {
 	for(i=0; i<TABLESIZE; i++) {
 		if(!exists(mem_map,i))
 			count++;
-		else if(count > 0)
+		else
 			count = 0;
+		
 		if(count == amount)
 			break;
 	}
@@ -673,25 +777,24 @@ uint32_t look_slow(mem_map_t * mem_map, uint32_t flags, int amount) {
 }
 
 int refill_queue(mem_map_t * mem_map){
+	int ret =  -1;
 	while(!queue_full(mem_map->quicklist) && (mem_map->recent < TABLESIZE)) {
 		if(exists(mem_map, mem_map->recent)){
 			mem_map->recent++;
 		}
 		else{
+			ret = 0;
 			queue_push(mem_map->quicklist, mem_map->recent);
 			mem_map->recent++;
 		}
 	}
-	if(queue_full(mem_map->quicklist))
-		return 0;
-	else
-		return -1;
+	return ret;
 }
 
 void print_mm(mem_map_t * mem_map, int start, int entries){
 	int i,j;
 	uint32_t mask;
-	for(i=start;i<(33 - entries);i++){
+	for(i=start;i<(start + entries);i++){
 		mask = 1;
 		for(j=0; j<32; j++, mask<<=1){
 			printf("%d ", ((mem_map->mm[i] & mask) >> j));

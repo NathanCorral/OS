@@ -86,7 +86,8 @@ void pagefault(){
 
 	asm volatile("movl %%cr2, %0  ;":"=r"(var));
 	printf(" %x \n", var);
-	halt(-1);
+	while(1);
+	//halt(-1);
 }
 void reserved(){
 	cli();

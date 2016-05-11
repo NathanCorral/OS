@@ -49,7 +49,6 @@ table_t kernel_dir;
 table_t kernel_vid;
 
 heap_t * kernel_heap;
-heap_t * user_heap;
 
 mem_map_t * pagedir;
 // Number of video pages for kernel
@@ -74,13 +73,6 @@ void pageinit(){
 
 	//printf("Starting Page Init\n");
 	int i;
-
-#ifdef TEST_PAGING
-	int * test = (int *) 0x01800000;
-	for(i=0; i<15; i++){
-		test[i] = i*7;
-	}
-#endif
 
 	uint32_t flags = 0;
 	// Initialize physical memory
@@ -110,8 +102,9 @@ void pageinit(){
 	// Initialize kernel heap
 	flags = (SET_P) | (SET_R);
 	kernel_heap = heap_init(&phys_mem, KERNEL_HEAP_VIRT, flags);
-	flags = (SET_P) | (SET_R) | (SET_U);
-	//user_heap = heap_init(&phys_mem, USER_HEAP_VIRT, flags);
+
+	// flags = (SET_P) | (SET_R) | (SET_U);
+	// user_heap = heap_init(&phys_mem, USER_HEAP_VIRT, flags);
 
 
 	// kernel_pagedir = get_table(kernel_heap, 0, MEGA4);
@@ -157,6 +150,8 @@ void kernel_setup(mem_map_t * dir) {
 	// Set directory to point to table
 	flags = SET_P | SET_R | SET_W;
 	set_map( dir, 0, (uint32_t) vidtab->table, flags );
+	free_map(kernel_heap, vidtab);
+
 }
 
 
@@ -196,7 +191,7 @@ void page_set(mem_map_t * dir){
 	asm volatile ("				\
 		movl %0, %%cr3 \n\
 		movl %%cr4, %%eax	\n\
-		orl $0x10, %%eax	\n\
+		orl $0x90, %%eax	\n\
 		movl %%eax, %%cr4	\n\
 		movl %%cr0, %%eax \n\
 		orl $0x80000000, %%eax	\n\
@@ -212,6 +207,19 @@ void * kmalloc(uint32_t nbytes) {
 	return _malloc(kernel_heap, nbytes);
 }
 
+void kfree(void * addr) {
+	// printf("Free 0x%#x, heap 0x%#x, w/ active table 0x%#x\n", addr, kernel_heap, pagedir);
+	_free(kernel_heap, addr);
+}
+
+void * umalloc(heap_t * user_heap, uint32_t nbytes) {
+	return _malloc(user_heap, nbytes);
+}
+
+void ufree(heap_t * user_heap, void * addr) {
+	_free(user_heap, addr);
+}
+
 // Get PID
 // Set up parent
 // handle node ll
@@ -224,11 +232,11 @@ void * kmalloc(uint32_t nbytes) {
 pcb_t * alloc_prog(int PID) {
 	int i;
 	mem_map_t * prog_dir = get_table(kernel_heap, 0, MEGA4);
-	// printf("After getting new Table\n");
+	// printf("New Table at 0x%#x\n", prog_dir);
 	// setup PCB
 	uint32_t flags = SET_P | SET_R;
 	//printf("alloc1\n");
-	pcb_t * pcb = (pcb_t *) get_page(kernel_heap, flags);
+	pcb_t * pcb = (pcb_t *) kmalloc(KILO4);
 	// printf("PCB at 0x%#x ends at 0x%#x\n", pcb, &(pcb->dir));
 	//printf("alloc2\n");
 	// pcb->kernel_sp=tss.esp0;
@@ -244,8 +252,9 @@ pcb_t * alloc_prog(int PID) {
 	}
 	//printf("alloc3\n");
 	// Set TSS for 1 page kernel stack
-	tss.esp0 = get_page(kernel_heap, flags);
+	tss.esp0 = kmalloc((int) KILO4);
 	pcb->kernel_bp = tss.esp0;
+	pcb->malloc_bp_save = tss.esp0;
 	pcb->espsave = tss.esp0;
 	// printf("After getting new K stack\n");
 	tss.ss0 = KERNEL_DS;
@@ -266,10 +275,47 @@ pcb_t * alloc_prog(int PID) {
 	// printf("After Big alloc\n");
 	pcb->dir = prog_dir;
 	pcb->user_vid_mem = NULL;
+	pcb->heap = NULL;
+
 
 	// print_dir();
 	//while(1);
 	return pcb;
+}
+
+void dealloc_prog(pcb_t * pcb) {
+	print_mm(&phys_mem, 0, 2);
+	// print_mm(&kernel_heap->heap_table, 0, 2);
+	// printf("Here2, Pagedir 0x%#x\n", pagedir);
+	printf("dir: 0x%#x, Vidtabe: 0x%#x, Video 0x%#x\n", pagedir->table, pagedir->table->table[0], ((table_t *) (pcb->dir->table->table[0] & ADDR_ENTRY))->table[VIDDIV]);
+	// printf("Flags0: 0x%#x\n", kernel_heap->heap_table.table->table[10]);
+	uint32_t prog_phys_addr = pcb->dir->table->table[PROG_VIRT_ADDR >> DIRECTORY_OFFSET];
+
+	free(&phys_mem, prog_phys_addr >> DIRECTORY_OFFSET);
+	// printf("Flags2: 0x%#x\n", kernel_heap->heap_table.table->table[10]);
+	heap_t * temp = pcb->heap;
+	heap_t * temp_free;
+	uint32_t heap_addr;
+	while(temp != NULL) {
+		heap_addr = pcb->dir->table->table[(uint32_t) temp >> DIRECTORY_OFFSET];
+		temp_free = temp;
+		temp = temp->next;
+		free(&phys_mem, heap_addr >> DIRECTORY_OFFSET);
+	}
+	printf("Free vid table 0x%#x\n", pcb->dir->table->table[0]);
+	// printf("Here 0x%#x, Phys 0x%#x\n", (((table_t *) (pcb->dir->table->table[0] & ADDR_ENTRY))), pcb->dir->table->table[PROG_VIRT_ADDR >> DIRECTORY_OFFSET]);
+	free_page(kernel_heap, ((uint32_t) pcb->dir->table->table[0]) & ADDR_ENTRY);
+	printf("Free dir table 0x%#x\n", pcb->dir->table);
+	// printf("Flags3: 0x%#x\n", kernel_heap->heap_table.table->table[10]);
+	free_page(kernel_heap, (uint32_t) pcb->dir->table);
+	// print_mm(&kernel_heap->heap_table, 0, 2);
+	free_map(kernel_heap, pcb->dir);
+	kfree(pcb->malloc_bp_save);
+	// printf("Flags4: 0x%#x\n", kernel_heap->heap_table.table->table[10]);
+	kfree(pcb);
+	// print_mm(&kernel_heap->heap_table, 0, 2);
+	printf("Done\n");
+	print_mm(&phys_mem, 0, 2);
 }
 
 
@@ -388,11 +434,13 @@ void print_heap(heap_t * heap, int num) {
 	heap_t* cur_heap = heap;
 	while(cur_heap->next != NULL) {
 		count++;
+		// printf("Place 0x%#x   ", cur_heap);
 		cur_heap = cur_heap->next;
 	}
-	printf("Heap %d  count %d Start Location 0x%#x\n", num, count, heap);
-	printf("Heap Map Start 0x%#x,  Size 0x%#x\n", heap->heap_table.start, heap->heap_table.size);
-	print_mm(&(heap->heap_table),0, 3);
+	// printf("\n");
+	printf("Heap %d  count %d Start Location 0x%#x, last 0x%#x\n", num, count, heap, cur_heap);
+	printf("Heap Map Start 0x%#x,  Size 0x%#x, table 0x%#x, phys 0x%#x\n", heap->heap_table.start, heap->heap_table.size, &heap->heap_table, heap->phys_mem);
+	print_mm(&(cur_heap->heap_table),0, 4);
 	print_heap(heap->small_heap, ++num);
 }
 
@@ -402,23 +450,52 @@ void print_heap(heap_t * heap, int num) {
 // These test are used to manipulate allocation and deallocation of memory and do not unallocate
 // several allocated pages.
 void paging_test(){
-	print_dir();
-	print_heap(kernel_heap, 0);
-	int i;
-	// int malloc_size = 32;
-	int amount = 7*KILO4;
-	uint32_t  * test = (uint32_t *) kmalloc(amount * 4);
+	// print_dir();
+	// print_heap(kernel_heap, 0);
+	int i,j;
+	int malloc_size = 250;
+	int amount = 20*KILO4;
+	uint8_t  ** test = (uint8_t **) kmalloc(amount * 4);
+	// _free(kernel_heap, test);
+	// print_heap(kernel_heap, 0);
+	// test = (uint8_t **) kmalloc(amount * 4);
+	// print_heap(kernel_heap, 0);
+	// while(1);
+	printf("Start %d mallocs of size %d\n", amount, malloc_size);
 	for(i=0; i<amount; i++) {
-		// test = (uint8_t *)  kmalloc(malloc_size);
-		test[i] = get_page(kernel_heap, (SET_P) | (SET_R));
-		printf("Malloc  ");
+		// test[i] = (uint8_t *)  kmalloc(malloc_size);
+		test[i] = (uint8_t *)   kmalloc( malloc_size);
+		// test[i] = get_page(kernel_heap, (SET_P) | (SET_R));
+		// printf("Malloc  ");
 		// for(j=0; j<malloc_size; j++) {
-		// 	*(test  + j) = 0x05;
+		// 	// if((*(test[i]+j)) == 0x05) {
+		// 	// 	while(1);
+		// 	// }
+		// 	*(test[i]  + j) = 0x05;
 		// }
-		printf("%d, at addr 0x%#x, reads %d\n", i, test[i], 0);
+
+		// printf("%d, at addr 0x%#x, reads %d\n", i, test[i], *(test[i]));
 		//get_table(kernel_heap, 2, KILO4);
 	}
+	printf("Start Freeing all\n");
+	for(i=0; i<amount; i++) {
+		// printf("Free 0x%#x\n", test[i]);
+		kfree( test[i]);
+	}
+	printf("Malloc again\n");
+	for(i=0; i<amount; i++) {
+		test[i] = (uint8_t *)   kmalloc(malloc_size);
+
+		// for(j=0; j<malloc_size; j++) {
+
+		// 	*(test[i]  + j) = 0x06;
+		// }
+		// printf("%d, at addr 0x%#x, reads %d\n", i, test[i], *(test[i]));
+	}
+	//printf("0x%#x\n", test[0]);
+	// while(1);
 	print_heap(kernel_heap, 0);
+	// print_mm(&phys_mem, 0, 3);
 
 	// int * test = (int *) 0x01800000;
 	// int i, pop;

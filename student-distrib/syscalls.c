@@ -63,43 +63,35 @@ void switch_to(pcb_t * pcb) {
 	asm volatile("movl %%ebp, %0":"=g"(running_process->kernel_bp));
 	asm volatile("movl %%esp, %0":"=g"(running_process->espsave));
 	running_process->kernel_sp=tss.esp0;
+	running_process->kernel_ss = tss.ss0;
 	// running_process->kernel_ss=tss.ss0;
 	// Remap user video memory
 	int terminal = getactiveterm();
-	if(running_process->term != terminal) {
+	if(running_process->term != terminal) 
 		remap_user_video(running_process, get_vid_buf_addr(running_process->term));
-	}
 
 	// Get next pcb
-	//cli();
 	if(pcb == NULL) {
 		pcb = running_process->next;
 		while(pcb->child != NULL) {
 			pcb = pcb->child;
 		}
 	}
-
 	if(pcb == running_process)
 		return;
 
 	// Set video mem on new process
-	if(pcb->term == terminal){
+	if(pcb->term == terminal)
 		remap_user_video(pcb, VIDEO);
-	}
 	
-	// printf("\nSwitch from %s num %d stack 0x%#x base 0x%#x esp0 0x%#x\n", running_process->temp, running_process->process, running_process->espsave, running_process->kernel_bp, running_process->kernel_sp);
-	// printf("To %s num %d stack 0x%#x base 0x%#x esp0 0x%#x\n", pcb->temp, pcb->process, pcb->espsave, pcb->kernel_bp, pcb->kernel_sp);
 	// Set running process
 	running_process = pcb;
 	page_set(running_process->dir);
 	// Set Saved State
-	//sti();
 	tss.esp0= running_process->kernel_sp; 
-	// tss.ss0= running_process->kernel_ss;
+	tss.ss0= running_process->kernel_ss;
 	asm volatile ("movl %0, %%ebp     ;"
 				"movl %1, %%esp     ;"
-				"leave				;"
-				"ret 				;"
 				::"g"(running_process->kernel_bp), "g"(running_process->espsave));
 	return;
 }
@@ -183,13 +175,9 @@ int32_t execute(const int8_t * cmd){
 	uint32_t namelength;
 	uint8_t argbuf[1024];
 	int i;
-
-
 	entrypoint=0;
 	spaceflag=0;
 	namelength=0;
-
-// printf("Start execute\n");
 	// Checks if file is valid
 	if(cmd == NULL){
 		return -1;
@@ -214,8 +202,6 @@ int32_t execute(const int8_t * cmd){
 
 	}
 	argbuf[i-namelength-1]= '\0';
-// printf ("parsed\n");
-
 
 	if(fsread(fname, 0, (uint8_t *)buf, 4) == -1){ // Checks for executable image
 		sti();
@@ -239,21 +225,10 @@ int32_t execute(const int8_t * cmd){
 		return -1;
 	}
 
-	for(i=0; i<4; i++){
-		//buf[i]= buf[i] & 0xFF;
-		
+	for(i=0; i<4; i++){		
 		entrypoint |= (buf[i] << i*(maxfd+1)); //set entrypoint
-		
 	}
-	// printf("Execute Entrypoint 0x%#x\n", entrypoint);
 
-//set up paging
-	
-	// if( newtask(openprocess)==-1)
-	// 	return -1;
-	
-
-	// printf("Before Alloc prog\n");
 	pcb_t * pcb =  alloc_prog(PID);
 	if(pcb == NULL){
 		sti();
@@ -301,69 +276,12 @@ int32_t execute(const int8_t * cmd){
 	sti();
 
 	strcpy(pcb->argsave, (int8_t *)argbuf);
-	// printf("ALLOCATED \n");
-	// while(1);
 	fstomem(fname, PROGADDR);
 
-//save ebp, esp, ss
-	//uint32_t esp;
-	
-	//pcb->kernel_sp=tss.esp0;
-
-	//uint32_t ebp;
-	//asm volatile("movl %%ebp, %0":"=g"(ebp));
-	//pcb->kernel_bp=ebp;
-	//pcb->kernel_ss=tss.ss0;
-
-
-//check if 0th open process
-	// if( running ==MASK){
-	// 	pcb->parent_process= -1;
-	// }
-	// else{
-	// 	pcb->parent_process= ((pcb_t *)((uint32_t)&esp & PCBALIGN))->process;
-	// }
-
-	// pcb->process= openprocess; 
-
-
-//clear file descs
-	// for (i=0; i<maxfd+1; i++){
-	// 	pcb->fdescs[i].position=0;
-	// 	pcb->fdescs[i].inuse=0;
-	// 	pcb->fdescs[i].inode=0;
-	// }
-
-	//set tss
-
-	//tss.esp0= MB8-KB8*openprocess-4; //need openprocess number
-	//tss.ss0=KERNEL_DS;
-	//kstackbottom=tss.esp0;
-
-	//open stdin, stdout
-	 open((uint8_t *) "stdin");
-	 open((uint8_t *) "stdout");
-	 // set_c();
-
-	// Set stack to new process
-	// tss.esp0= running_process->kernel_sp; 
-	// tss.ss0= running_process->kernel_ss;
-	// asm volatile ("movl %0, %%ebp     ;"
-	// 			"movl %1, %%esp     ;"
-	// 			::"g"(running_process->kernel_bp), "g"(running_process->espsave));
-
+	open((uint8_t *) "stdin");
+	open((uint8_t *) "stdout");
 	gotouser(entrypoint);
 	asm volatile ("haltreturn: ");
-
-// asm volatile ("haltreturn:		;"
-// 				"movl %0, %%eax ;"
-// 				"leave			;"
-// 				"ret 			;"
-// 				::"g"(savestatus) );
-
-	// uint32_t temp;
-	// temp = ((pcb_t *)((uint32_t)&temp & PCBALIGN))->savestatus;
-	// return  temp;
 	return savestatus;
 
 }
@@ -446,12 +364,15 @@ int32_t halt(int8_t status){
 	// Set Saved State
 	tss.esp0= running_process->kernel_sp; 
 	tss.ss0= running_process->kernel_ss;
+	asm volatile ("movl %0, %%ebp     ;"
+			"movl %1, %%esp     ;"
+			::"g"(running_process->kernel_bp), "g"(running_process->espsave));
+	// dealloc_prog(pcb);
 	sti();
 //go bacck to execute
-	asm volatile ("movl %0, %%ebp     ;"
-				"movl %1, %%esp     ;"
+	asm volatile (
 				"jmp haltreturn ;"
-				::"g"(running_process->kernel_bp), "g"(running_process->espsave));
+				::);
 	return 0;
 
 }

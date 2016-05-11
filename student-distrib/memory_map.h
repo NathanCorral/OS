@@ -18,7 +18,7 @@
 
 // floor(4 KB / MEM_MAP_SIZE)
 // This is 14 but subtract one for the size of the heap type
-#define NUM_MAPS 6
+#define NUM_MAPS 3
 //#define AMOUNT 0
 #define SMALL_HEAPS 1
 
@@ -40,6 +40,7 @@
 #include "lib.h"
 
 typedef struct heap_t heap_t;
+typedef struct heap_info_t heap_info_t;
 
 typedef struct table_type {
 	uint32_t table[TABLESIZE];
@@ -69,17 +70,6 @@ typedef struct mem_map_type {
 } mem_map_t;
 
 
-typedef struct heap_info_type {
-	uint32_t num_alloc;
-	uint32_t num_free;
-	// Abuse the fact that we alloc a lot of extra maps
-	// This map uses the table to keep the location of each allocation
-	mem_map_t * location;
-	// This map uses the same entry as in loaction but the table keeps track of the size
-	mem_map_t * size;
-
-} heap_info_t;
-
 // Treat heap as 4 MB blocks where we allocate 4 KB at a time
 struct heap_t {
 	// If we run out of room in this heap 
@@ -93,6 +83,8 @@ struct heap_t {
 	mem_map_t heap_table;
 	// For allocating blocks less than HEAP_RATIO * (the size of blocks allocated) we go to smaller heap
 	heap_t * small_heap;
+
+	uint32_t sizes[171];
 
 	// Array of open maps since we want to fill 4 KB for heap data structure.
 	// Hand them out to whoever needs them.  Just extra space
@@ -111,6 +103,8 @@ _malloc:  Marks memory as used in heap and returns pointer to allocated memory
 		A pointer to the allocated memory with the heap flags set on the table
 */
 void * _malloc(heap_t * heap, uint32_t nbytes);
+
+void _free(heap_t* heap, void* addr);
 
 /*
 heap_init:  Initialize A heap.

@@ -18,10 +18,7 @@ pushl %ebp
 pushl %esi
 pushl %edi
 
-
-
 call pit_handle
-
 
 popl %edi
 popl %esi

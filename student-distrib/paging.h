@@ -82,6 +82,11 @@ kmalloc:  Kernel Malloc Function.   Calls _malloc on the Kernel Heap
 */
 extern void * kmalloc(uint32_t nbytes);
 
+extern void kfree(void * addr);
+extern void * umalloc(heap_t * user_heap, uint32_t nbytes);
+extern void ufree(heap_t * user_heap, void * addr);
+extern void dealloc_prog(pcb_t * pcb);
+
 
 /*
 map_user_vid:  Get a table, Set the program page directory to point to it

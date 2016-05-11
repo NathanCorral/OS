@@ -50,6 +50,7 @@ struct pcb_t{
 	fdescriptor_t fdescs[NUM_FILES];
 	uint32_t kernel_sp; // Points to the top of the kernel stack
 	uint32_t kernel_bp; // Points to the base of the kernel stack
+	uint32_t malloc_bp_save;
 	uint32_t kernel_ss;
 	uint32_t espsave;
 	uint32_t user_sp;  // Points to the top of the user stack
@@ -65,6 +66,7 @@ struct pcb_t{
 	pcb_t * child;
 	mem_map_t * dir;
 	uint8_t * user_vid_mem;
+	heap_t * heap;
 };	
 
 
