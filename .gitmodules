@@ -1,0 +1,3 @@
+[submodule "EdgeMiner"]
+	path = EdgeMiner
+	url = git@github.com:NathanCorral/EdgeMiner.git
